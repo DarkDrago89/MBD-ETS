@@ -26,6 +26,8 @@
     OFFICE_USERS ||──────────o{ SCHOOL_USERS : "ditugaskan ke"
     SCHOOLS      ||──────────o{ SCHOOL_USERS : "memiliki petugas"
     (1 petugas bisa di banyak sekolah, 1 sekolah punya banyak petugas)
+    Constraint UNIQUE (office_user_username, school_npsn)
+    mencegah duplikasi penugasan
 
 [3] Relasi Sekolah Asal Siswa
     JUNIOR_SCHOOLS ||──────────o{ USERS : "asal sekolah dari"
@@ -35,7 +37,7 @@
  KELOMPOK B: JALUR PENDAFTARAN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[4] Calon Siswa ke Registrasi (1 siswa bisa daftar di masing-masing jalur)
+[4] Calon Siswa ke Registrasi
     USERS ||──────────o{ REGISTRATIONS_AFIRMASI         : "mendaftar via"
     USERS ||──────────o{ REGISTRATIONS_MUTASI           : "mendaftar via"
     USERS ||──────────o{ REGISTRATIONS_PRESTASI_MANDIRI : "mendaftar via"
@@ -51,62 +53,75 @@
  KELOMPOK C: PROSES VERIFIKASI
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[6] Registrasi ke Verifikasi (1 registrasi menghasilkan 0 atau 1 verifikasi)
-    REGISTRATIONS_AFIRMASI         ||──────────o| VERIFICATION_AFIRMASI         : "diverifikasi"
-    REGISTRATIONS_MUTASI           ||──────────o| VERIFICATION_MUTASI           : "diverifikasi"
-    REGISTRATIONS_PRESTASI_MANDIRI ||──────────o| VERIFICATION_PRESTASI_MANDIRI : "diverifikasi"
-    REGISTRATIONS_ZONASI           ||──────────o| VERIFICATION_ZONASI           : "diverifikasi"
+[6] Registrasi ke Verifikasi
+    REGISTRATIONS_AFIRMASI         ||──────────|| VERIFICATION_AFIRMASI         : "diverifikasi"
+    REGISTRATIONS_MUTASI           ||──────────|| VERIFICATION_MUTASI           : "diverifikasi"
+    REGISTRATIONS_PRESTASI_MANDIRI ||──────────|| VERIFICATION_PRESTASI_MANDIRI : "diverifikasi"
+    REGISTRATIONS_ZONASI           ||──────────|| VERIFICATION_ZONASI           : "diverifikasi"
+    (1 registrasi tepat 1 verifikasi, karena registration_id UNIQUE NOT NULL)
 
-[7] Petugas ke Verifikasi (1 petugas memverifikasi 0 atau banyak pendaftaran)
+[7] Petugas ke Verifikasi
     OFFICE_USERS ||──────────o{ VERIFICATION_AFIRMASI         : "memverifikasi"
     OFFICE_USERS ||──────────o{ VERIFICATION_MUTASI           : "memverifikasi"
     OFFICE_USERS ||──────────o{ VERIFICATION_PRESTASI_MANDIRI : "memverifikasi"
     OFFICE_USERS ||──────────o{ VERIFICATION_ZONASI           : "memverifikasi"
+    (operator_id NOT NULL, petugas wajib ada saat verifikasi)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  KELOMPOK D: PROSES PENERIMAAN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-[8] Verifikasi ke Penerimaan (1 verifikasi menghasilkan 0 atau 1 penerimaan)
-    VERIFICATION_AFIRMASI         ||──────────o| PENERIMAAN_AFIRMASI         : "menghasilkan"
-    VERIFICATION_MUTASI           ||──────────o| PENERIMAAN_MUTASI           : "menghasilkan"
-    VERIFICATION_PRESTASI_MANDIRI ||──────────o| PENERIMAAN_PRESTASI_MANDIRI : "menghasilkan"
-    VERIFICATION_ZONASI           ||──────────o| PENERIMAAN_ZONASI           : "menghasilkan"
+[8] Verifikasi ke Penerimaan
+    VERIFICATION_AFIRMASI         ||──────────|| PENERIMAAN_AFIRMASI         : "menghasilkan"
+    VERIFICATION_MUTASI           ||──────────|| PENERIMAAN_MUTASI           : "menghasilkan"
+    VERIFICATION_PRESTASI_MANDIRI ||──────────|| PENERIMAAN_PRESTASI_MANDIRI : "menghasilkan"
+    VERIFICATION_ZONASI           ||──────────|| PENERIMAAN_ZONASI           : "menghasilkan"
+    (verification_id UNIQUE NOT NULL, relasi 1-ke-1 penuh)
 
-[9] Kepala Sekolah ke Penerimaan Afirmasi (khusus afirmasi ada kepsek_id)
+[9] Kepala Sekolah ke Penerimaan Afirmasi (KHUSUS jalur afirmasi)
     OFFICE_USERS ||──────────o{ PENERIMAAN_AFIRMASI : "ditetapkan oleh kepala sekolah"
+    (kepsek_id nullable / ON DELETE SET NULL,
+     hanya ada di jalur afirmasi)
 
 [10] Sekolah ke Penerimaan Prestasi Mandiri (via NPSN)
     SCHOOLS ||──────────o{ PENERIMAAN_PRESTASI_MANDIRI : "tempat diterima"
+    (npsn NOT NULL, ON DELETE RESTRICT,
+     hanya ada di jalur prestasi mandiri)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- ALUR PROSES LENGKAP (Flow Diagram)
+ ALUR PROSES LENGKAP
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  JUNIOR_SCHOOLS ──── (asal sekolah) ────► USERS ◄──── SCHOOLS
-                                             │              │
-                              ┌──────────────┼──────────────┘
-                              │              │
-                    ┌─────────▼─────────┐    │ (sekolah tujuan)
-                    │   Memilih Jalur   │    │
-                    └──────┬────────────┘    │
-                           │                 │
-          ┌────────────────┼─────────────────┼──────────────┐
-          │                │                 │              │
-          ▼                ▼                 ▼              ▼
-    REG_AFIRMASI   REG_MUTASI        REG_PRESTASI    REG_ZONASI
-          │                │                 │              │
-          └────────────────┼─────────────────┼──────────────┘
-                           │
-                    ┌──────▼──────┐
-                    │  VERIFIKASI  │ ◄─── OFFICE_USERS (operator)
-                    │  (per jalur) │
-                    └──────┬──────┘
-                           │ (jika approve)
-                    ┌──────▼──────┐
-                    │  PENERIMAAN  │ ◄─── OFFICE_USERS (kepsek, khusus afirmasi)
-                    │  (per jalur) │
-                    └─────────────┘
+  JUNIOR_SCHOOLS ──(asal sekolah)──► USERS ◄──(sekolah tujuan)── SCHOOLS
+                                       │                               │
+                         ┌─────────────┼───────────────────────────────┘
+                         │             │ (memilih jalur)
+               ┌─────────▼──────────┐  │
+               │    Memilih Jalur   │  │
+               └──┬──────┬──────┬───┘  │
+                  │      │      │      │
+          ┌───────┘  ┌───┘  ┌───┘  ┌───┘
+          ▼          ▼      ▼      ▼
+    REG_         REG_    REG_    REG_
+    AFIRMASI     MUTASI  PRESTASI ZONASI
+          │          │      │      │
+          └──────────┴──────┴──────┘
+                         │
+              ┌──────────▼──────────┐
+              │  VERIFICATION       │◄── OFFICE_USERS
+              │  (registration_id   │    (operator, NOT NULL)
+              │   UNIQUE NOT NULL)  │
+              └──────────┬──────────┘
+                         │ (1 verifikasi → 1 penerimaan)
+              ┌──────────▼──────────┐
+              │  PENERIMAAN         │
+              │  (verification_id   │◄── OFFICE_USERS (kepsek,
+              │   UNIQUE NOT NULL)  │    khusus afirmasi, nullable)
+              └─────────────────────┘
+                         │
+                    (khusus prestasi)
+                         │
+                      SCHOOLS (via npsn)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  KETERANGAN NOTASI
@@ -130,534 +145,956 @@
  KELOMPOK A: MANAJEMEN PENGGUNA & SEKOLAH
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-┌─────────────────────────────────────────────────────────────┐
-│ ROLES                                                       │
-├──────────────┬──────────────────┬───────────────────────────┤
-│ Kolom        │ Tipe Data        │ Keterangan                │
-├──────────────┼──────────────────┼───────────────────────────┤
-│ id           │ SERIAL           │ PRIMARY KEY               │
-│ name         │ VARCHAR(100)     │ NOT NULL                  │
-│ created_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP │
-│ updated_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ ROLES                                                           │
+├──────────────┬──────────────────┬──────────────────────────────┤
+│ Kolom        │ Tipe Data        │ Constraint / Keterangan      │
+├──────────────┼──────────────────┼──────────────────────────────┤
+│ id           │ SERIAL           │ PRIMARY KEY                  │
+│ name         │ VARCHAR(100)     │ NOT NULL                     │
+│ created_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP    │
+│ updated_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP    │
+└─────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────┐
-│ OFFICE_USERS                                                │
-├──────────────┬──────────────────┬───────────────────────────┤
-│ Kolom        │ Tipe Data        │ Keterangan                │
-├──────────────┼──────────────────┼───────────────────────────┤
-│ id           │ SERIAL           │ PRIMARY KEY               │
-│ name         │ VARCHAR(255)     │ NOT NULL                  │
-│ username     │ VARCHAR(100)     │ UNIQUE NOT NULL           │
-│ password     │ VARCHAR(255)     │ NOT NULL                  │
-│ role_id      │ INT              │ FK → ROLES(id)            │
-│ created_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP │
-│ updated_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ OFFICE_USERS                                                    │
+├──────────────┬──────────────────┬──────────────────────────────┤
+│ Kolom        │ Tipe Data        │ Constraint / Keterangan      │
+├──────────────┼──────────────────┼──────────────────────────────┤
+│ id           │ SERIAL           │ PRIMARY KEY                  │
+│ name         │ VARCHAR(255)     │ NOT NULL                     │
+│ username     │ VARCHAR(100)     │ NOT NULL, UNIQUE             │
+│ password     │ VARCHAR(255)     │ NOT NULL                     │
+│ role_id      │ INT              │ NOT NULL                     │
+│              │                  │ FK → ROLES(id)               │
+│              │                  │ ON UPDATE CASCADE            │
+│              │                  │ ON DELETE RESTRICT           │
+│ created_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP    │
+│ updated_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP    │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_office_users_role_id ON (role_id)
 
-┌─────────────────────────────────────────────────────────────┐
-│ SCHOOLS                                                     │
-├──────────────────────────────┬──────────────┬───────────────┤
-│ Kolom                        │ Tipe Data    │ Keterangan    │
-├──────────────────────────────┼──────────────┼───────────────┤
-│ id                           │ SERIAL       │ PRIMARY KEY   │
-│ name                         │ VARCHAR(255) │ NOT NULL      │
-│ kode                         │ VARCHAR(50)  │               │
-│ npsn                         │ VARCHAR(20)  │ UNIQUE NOT NULL│
-│ minimum_average              │ DECIMAL(5,2) │               │
-│ city_id                      │ INT          │               │
-│ created_at                   │ TIMESTAMP    │ DEFAULT NOW() │
-│ updated_at                   │ TIMESTAMP    │ DEFAULT NOW() │
-│ latitude                     │ DECIMAL(10,7)│               │
-│ longitude                    │ DECIMAL(10,7)│               │
-│ pagu_afirmasi                │ INT          │ DEFAULT 0     │
-│ pagu_mutasi                  │ INT          │ DEFAULT 0     │
-│ pagu_prestasi_undangan       │ INT          │ DEFAULT 0     │
-│ pagu_zonasi                  │ INT          │ DEFAULT 0     │
-│ pagu_prestasi_tesmandiri     │ INT          │ DEFAULT 0     │
-│ pagu_tidak_naik_kelas        │ INT          │ DEFAULT 0     │
-│ school_code                  │ VARCHAR(20)  │               │
-│ kebijakan_sisa_pagu_afirmasi │ TEXT         │               │
-│ kebijakan_sisa_pagu_mutasi   │ TEXT         │               │
-│ kebijakan_sisa_pagu_undangan │ TEXT         │               │
-│ kebijakan_sisa_pagu_zonasi   │ TEXT         │               │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ SCHOOLS                                                         │
+├──────────────────────────────┬──────────────┬───────────────────┤
+│ Kolom                        │ Tipe Data    │ Constraint        │
+├──────────────────────────────┼──────────────┼───────────────────┤
+│ id                           │ SERIAL       │ PRIMARY KEY       │
+│ name                         │ VARCHAR(255) │ NOT NULL          │
+│ kode                         │ VARCHAR(50)  │                   │
+│ npsn                         │ VARCHAR(20)  │ NOT NULL, UNIQUE  │
+│ minimum_average              │ DECIMAL(5,2) │                   │
+│ city_id                      │ INT          │                   │
+│ created_at                   │ TIMESTAMP    │ DEFAULT NOW()     │
+│ updated_at                   │ TIMESTAMP    │ DEFAULT NOW()     │
+│ latitude                     │ DECIMAL(10,7)│                   │
+│ longitude                    │ DECIMAL(10,7)│                   │
+│ pagu_afirmasi                │ INT          │ DEFAULT 0         │
+│ pagu_mutasi                  │ INT          │ DEFAULT 0         │
+│ pagu_prestasi_undangan       │ INT          │ DEFAULT 0         │
+│ pagu_zonasi                  │ INT          │ DEFAULT 0         │
+│ pagu_prestasi_tesmandiri     │ INT          │ DEFAULT 0         │
+│ pagu_tidak_naik_kelas        │ INT          │ DEFAULT 0         │
+│ school_code                  │ VARCHAR(20)  │                   │
+│ kebijakan_sisa_pagu_afirmasi │ TEXT         │                   │
+│ kebijakan_sisa_pagu_mutasi   │ TEXT         │                   │
+│ kebijakan_sisa_pagu_undangan │ TEXT         │                   │
+│ kebijakan_sisa_pagu_zonasi   │ TEXT         │                   │
+└─────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────┐
-│ SCHOOL_USERS                   [Tabel Junction Many-to-Many]│
-├──────────────────────┬──────────────┬────────────────────────┤
-│ Kolom                │ Tipe Data    │ Keterangan             │
-├──────────────────────┼──────────────┼────────────────────────┤
-│ id                   │ SERIAL       │ PRIMARY KEY            │
-│ office_user_username │ VARCHAR(100) │ FK → OFFICE_USERS      │
-│                      │              │    (username)          │
-│ school_npsn          │ VARCHAR(20)  │ FK → SCHOOLS(npsn)     │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ SCHOOL_USERS              [Junction Table: Many-to-Many]        │
+├──────────────────────┬──────────────┬─────────────────────────── ┤
+│ Kolom                │ Tipe Data    │ Constraint / Keterangan    │
+├──────────────────────┼──────────────┼────────────────────────────┤
+│ id                   │ SERIAL       │ PRIMARY KEY                │
+│ office_user_username │ VARCHAR(100) │ NOT NULL                   │
+│                      │              │ FK → OFFICE_USERS(username)│
+│                      │              │ ON UPDATE CASCADE          │
+│                      │              │ ON DELETE CASCADE          │
+│ school_npsn          │ VARCHAR(20)  │ NOT NULL                   │
+│                      │              │ FK → SCHOOLS(npsn)         │
+│                      │              │ ON UPDATE CASCADE          │
+│                      │              │ ON DELETE CASCADE          │
+│ ── UNIQUE ──         │              │ (office_user_username,     │
+│                      │              │  school_npsn)              │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_school_users_office_user_username ON (office_user_username)
+         idx_school_users_school_npsn          ON (school_npsn)
 
-┌─────────────────────────────────────────────────────────────┐
-│ JUNIOR_SCHOOLS                                              │
-├──────────────┬──────────────────┬───────────────────────────┤
-│ Kolom        │ Tipe Data        │ Keterangan                │
-├──────────────┼──────────────────┼───────────────────────────┤
-│ id           │ SERIAL           │ PRIMARY KEY               │
-│ npsn         │ VARCHAR(20)      │ UNIQUE NOT NULL           │
-│ name         │ VARCHAR(255)     │ NOT NULL                  │
-│ created_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP │
-│ updated_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ JUNIOR_SCHOOLS                                                  │
+├──────────────┬──────────────────┬──────────────────────────────┤
+│ Kolom        │ Tipe Data        │ Constraint / Keterangan      │
+├──────────────┼──────────────────┼──────────────────────────────┤
+│ id           │ SERIAL           │ PRIMARY KEY                  │
+│ npsn         │ VARCHAR(20)      │ NOT NULL, UNIQUE             │
+│ name         │ VARCHAR(255)     │ NOT NULL                     │
+│ created_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP    │
+│ updated_at   │ TIMESTAMP        │ DEFAULT CURRENT_TIMESTAMP    │
+└─────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────┐
-│ USERS                              [Calon Peserta Didik]    │
-├──────────────────────┬──────────────┬────────────────────────┤
-│ Kolom                │ Tipe Data    │ Keterangan             │
-├──────────────────────┼──────────────┼────────────────────────┤
-│ id                   │ SERIAL       │ PRIMARY KEY            │
-│ npsn                 │ VARCHAR(20)  │ FK → JUNIOR_SCHOOLS    │
-│                      │              │    (npsn) [asal SMP]   │
-│ nisn                 │ VARCHAR(20)  │ UNIQUE NOT NULL        │
-│ birth_date           │ DATE         │                        │
-│ name                 │ VARCHAR(255) │ NOT NULL               │
-│ gender               │ VARCHAR(10)  │ CHECK ('L','P')        │
-│ address              │ TEXT         │                        │
-│ phone                │ VARCHAR(20)  │                        │
-│ school_name          │ VARCHAR(255) │                        │
-│ cluster              │ VARCHAR(100) │                        │
-│ created_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ school_destination_id│ INT          │ FK → SCHOOLS(id)       │
-│ latitude             │ DECIMAL(10,7)│                        │
-│ longitude            │ DECIMAL(10,7)│                        │
-│ registration_1_type  │ VARCHAR(50)  │ Jenis jalur ke-1       │
-│ registration_2_type  │ VARCHAR(50)  │ Jenis jalur ke-2       │
-│ registration_3_type  │ VARCHAR(50)  │ Jenis jalur ke-3       │
-│ registration_1_id    │ INT          │ ID registrasi ke-1     │
-│ registration_2_id    │ INT          │ ID registrasi ke-2     │
-│ registration_3_id    │ INT          │ ID registrasi ke-3     │
-│ acceptance_type      │ VARCHAR(50)  │ Jalur yang diterima    │
-│ acceptance_id        │ INT          │ ID penerimaan          │
-│ deleted_at           │ TIMESTAMP    │ Soft delete            │
-│ jalur_prestasi       │ VARCHAR(100) │ Jenis prestasi         │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ USERS                              [Calon Peserta Didik]        │
+├──────────────────────┬──────────────┬──────────────────────────┤
+│ Kolom                │ Tipe Data    │ Constraint / Keterangan  │
+├──────────────────────┼──────────────┼──────────────────────────┤
+│ id                   │ SERIAL       │ PRIMARY KEY              │
+│ npsn                 │ VARCHAR(20)  │ NOT NULL                 │
+│                      │              │ FK → JUNIOR_SCHOOLS(npsn)│
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE RESTRICT       │
+│ nisn                 │ VARCHAR(20)  │ NOT NULL, UNIQUE         │
+│ birth_date           │ DATE         │                          │
+│ name                 │ VARCHAR(255) │ NOT NULL                 │
+│ gender               │ VARCHAR(10)  │ CHECK (NULL,'L','P')     │
+│ address              │ TEXT         │                          │
+│ phone                │ VARCHAR(20)  │                          │
+│ school_name          │ VARCHAR(255) │                          │
+│ cluster              │ VARCHAR(100) │                          │
+│ created_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ school_destination_id│ INT          │ FK → SCHOOLS(id)         │
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE SET NULL       │
+│ latitude             │ DECIMAL(10,7)│                          │
+│ longitude            │ DECIMAL(10,7)│                          │
+│ registration_1_type  │ VARCHAR(50)  │ Jenis jalur ke-1         │
+│ registration_2_type  │ VARCHAR(50)  │ Jenis jalur ke-2         │
+│ registration_3_type  │ VARCHAR(50)  │ Jenis jalur ke-3         │
+│ registration_1_id    │ INT          │ ID registrasi ke-1       │
+│ registration_2_id    │ INT          │ ID registrasi ke-2       │
+│ registration_3_id    │ INT          │ ID registrasi ke-3       │
+│ acceptance_type      │ VARCHAR(50)  │ Jalur yang diterima      │
+│ acceptance_id        │ INT          │ ID penerimaan            │
+│ deleted_at           │ TIMESTAMP    │ Soft delete              │
+│ jalur_prestasi       │ VARCHAR(100) │ Jenis prestasi           │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_users_npsn                 ON (npsn)
+         idx_users_school_destination_id ON (school_destination_id)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  KELOMPOK B: TABEL REGISTRASI (4 JALUR)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-┌─────────────────────────────────────────────────────────────┐
-│ REGISTRATIONS_AFIRMASI                                      │
-├──────────────────────┬──────────────┬────────────────────────┤
-│ Kolom                │ Tipe Data    │ Keterangan             │
-├──────────────────────┼──────────────┼────────────────────────┤
-│ id                   │ SERIAL       │ PRIMARY KEY            │
-│ user_id              │ INT          │ FK → USERS(id)         │
-│ jenis                │ VARCHAR(100) │ Jenis afirmasi         │
-│ school_destination_id│ INT          │ FK → SCHOOLS(id)       │
-│ distance             │ DECIMAL(10,2)│ Jarak ke sekolah (km)  │
-│ verification_schedule│ TIMESTAMP    │ Jadwal verifikasi      │
-│ status               │ VARCHAR(50)  │ pending/verified/      │
-│                      │              │ rejected/accepted      │
-│ created_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ documents            │ TEXT         │ Daftar dokumen         │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ REGISTRATIONS_AFIRMASI                                          │
+├──────────────────────┬──────────────┬──────────────────────────┤
+│ Kolom                │ Tipe Data    │ Constraint / Keterangan  │
+├──────────────────────┼──────────────┼──────────────────────────┤
+│ id                   │ SERIAL       │ PRIMARY KEY              │
+│ user_id              │ INT          │ NOT NULL                 │
+│                      │              │ FK → USERS(id)           │
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE CASCADE        │
+│ jenis                │ VARCHAR(100) │ Jenis afirmasi           │
+│ school_destination_id│ INT          │ NOT NULL                 │
+│                      │              │ FK → SCHOOLS(id)         │
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE RESTRICT       │
+│ distance             │ DECIMAL(10,2)│ Jarak ke sekolah (km)   │
+│ verification_schedule│ TIMESTAMP    │ Jadwal verifikasi        │
+│ status               │ VARCHAR(50)  │ pending/verified/        │
+│                      │              │ rejected/accepted        │
+│ created_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ documents            │ TEXT         │ Daftar dokumen           │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_reg_afirmasi_user_id              ON (user_id)
+         idx_reg_afirmasi_school_destination_id ON (school_destination_id)
 
-┌─────────────────────────────────────────────────────────────┐
-│ REGISTRATIONS_MUTASI                                        │
-├──────────────────────┬──────────────┬────────────────────────┤
-│ Kolom                │ Tipe Data    │ Keterangan             │
-├──────────────────────┼──────────────┼────────────────────────┤
-│ id                   │ SERIAL       │ PRIMARY KEY            │
-│ user_id              │ INT          │ FK → USERS(id)         │
-│ jenis                │ VARCHAR(100) │ Jenis mutasi           │
-│ school_destination_id│ INT          │ FK → SCHOOLS(id)       │
-│ distance             │ DECIMAL(10,2)│ Jarak ke sekolah (km)  │
-│ verification_schedule│ TIMESTAMP    │ Jadwal verifikasi      │
-│ status               │ VARCHAR(50)  │ pending/verified/      │
-│                      │              │ rejected/accepted      │
-│ created_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ documents            │ TEXT         │ Daftar dokumen         │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ REGISTRATIONS_MUTASI                                            │
+├──────────────────────┬──────────────┬──────────────────────────┤
+│ Kolom                │ Tipe Data    │ Constraint / Keterangan  │
+├──────────────────────┼──────────────┼──────────────────────────┤
+│ id                   │ SERIAL       │ PRIMARY KEY              │
+│ user_id              │ INT          │ NOT NULL                 │
+│                      │              │ FK → USERS(id)           │
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE CASCADE        │
+│ jenis                │ VARCHAR(100) │ Jenis mutasi             │
+│ school_destination_id│ INT          │ NOT NULL                 │
+│                      │              │ FK → SCHOOLS(id)         │
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE RESTRICT       │
+│ distance             │ DECIMAL(10,2)│ Jarak ke sekolah (km)   │
+│ verification_schedule│ TIMESTAMP    │ Jadwal verifikasi        │
+│ status               │ VARCHAR(50)  │ pending/verified/        │
+│                      │              │ rejected/accepted        │
+│ created_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ documents            │ TEXT         │ Daftar dokumen           │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_reg_mutasi_user_id              ON (user_id)
+         idx_reg_mutasi_school_destination_id ON (school_destination_id)
 
-┌─────────────────────────────────────────────────────────────┐
-│ REGISTRATIONS_PRESTASI_MANDIRI                              │
-├──────────────────────┬──────────────┬────────────────────────┤
-│ Kolom                │ Tipe Data    │ Keterangan             │
-├──────────────────────┼──────────────┼────────────────────────┤
-│ id                   │ SERIAL       │ PRIMARY KEY            │
-│ user_id              │ INT          │ FK → USERS(id)         │
-│ data                 │ TEXT         │ Data prestasi          │
-│ school_destination_id│ INT          │ FK → SCHOOLS(id)       │
-│ distance             │ DECIMAL(10,2)│ Jarak ke sekolah (km)  │
-│ verification_schedule│ TIMESTAMP    │ Jadwal verifikasi      │
-│ status               │ VARCHAR(50)  │ pending/verified/      │
-│                      │              │ rejected/accepted      │
-│ created_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ documents            │ TEXT         │ Daftar dokumen         │
-│ test_number          │ VARCHAR(50)  │ Nomor ujian            │
-│ final_score          │ DECIMAL(5,2) │ Nilai akhir            │
-│ test_score           │ DECIMAL(5,2) │ Nilai ujian            │
-│ jurusan              │ VARCHAR(100) │ IPA / IPS              │
-│ ruang_tes            │ VARCHAR(50)  │ Ruang ujian            │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ REGISTRATIONS_PRESTASI_MANDIRI                                  │
+├──────────────────────┬──────────────┬──────────────────────────┤
+│ Kolom                │ Tipe Data    │ Constraint / Keterangan  │
+├──────────────────────┼──────────────┼──────────────────────────┤
+│ id                   │ SERIAL       │ PRIMARY KEY              │
+│ user_id              │ INT          │ NOT NULL                 │
+│                      │              │ FK → USERS(id)           │
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE CASCADE        │
+│ data                 │ TEXT         │ Data prestasi            │
+│ school_destination_id│ INT          │ NOT NULL                 │
+│                      │              │ FK → SCHOOLS(id)         │
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE RESTRICT       │
+│ distance             │ DECIMAL(10,2)│ Jarak ke sekolah (km)   │
+│ verification_schedule│ TIMESTAMP    │ Jadwal verifikasi        │
+│ status               │ VARCHAR(50)  │ pending/verified/        │
+│                      │              │ rejected/accepted        │
+│ created_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ documents            │ TEXT         │ Daftar dokumen           │
+│ test_number          │ VARCHAR(50)  │ Nomor ujian              │
+│ final_score          │ DECIMAL(5,2) │ Nilai akhir              │
+│ test_score           │ DECIMAL(5,2) │ Nilai ujian              │
+│ jurusan              │ VARCHAR(100) │ IPA / IPS                │
+│ ruang_tes            │ VARCHAR(50)  │ Ruang ujian              │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_reg_prestasi_user_id              ON (user_id)
+         idx_reg_prestasi_school_destination_id ON (school_destination_id)
 
-┌─────────────────────────────────────────────────────────────┐
-│ REGISTRATIONS_ZONASI                                        │
-├──────────────────────┬──────────────┬────────────────────────┤
-│ Kolom                │ Tipe Data    │ Keterangan             │
-├──────────────────────┼──────────────┼────────────────────────┤
-│ id                   │ SERIAL       │ PRIMARY KEY            │
-│ user_id              │ INT          │ FK → USERS(id)         │
-│ school_destination_id│ INT          │ FK → SCHOOLS(id)       │
-│ distance             │ DECIMAL(10,2)│ Jarak ke sekolah (km)  │
-│ verification_schedule│ TIMESTAMP    │ Jadwal verifikasi      │
-│ status               │ VARCHAR(50)  │ pending/verified/      │
-│                      │              │ rejected/accepted      │
-│ created_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()          │
-│ documents            │ TEXT         │ Daftar dokumen         │
-│ kk_date              │ DATE         │ Tanggal terbit KK      │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ REGISTRATIONS_ZONASI                                            │
+├──────────────────────┬──────────────┬──────────────────────────┤
+│ Kolom                │ Tipe Data    │ Constraint / Keterangan  │
+├──────────────────────┼──────────────┼──────────────────────────┤
+│ id                   │ SERIAL       │ PRIMARY KEY              │
+│ user_id              │ INT          │ NOT NULL                 │
+│                      │              │ FK → USERS(id)           │
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE CASCADE        │
+│ school_destination_id│ INT          │ NOT NULL                 │
+│                      │              │ FK → SCHOOLS(id)         │
+│                      │              │ ON UPDATE CASCADE        │
+│                      │              │ ON DELETE RESTRICT       │
+│ distance             │ DECIMAL(10,2)│ Jarak ke sekolah (km)   │
+│ verification_schedule│ TIMESTAMP    │ Jadwal verifikasi        │
+│ status               │ VARCHAR(50)  │ pending/verified/        │
+│                      │              │ rejected/accepted        │
+│ created_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ updated_at           │ TIMESTAMP    │ DEFAULT NOW()            │
+│ documents            │ TEXT         │ Daftar dokumen           │
+│ kk_date              │ DATE         │ Tanggal terbit KK        │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_reg_zonasi_user_id              ON (user_id)
+         idx_reg_zonasi_school_destination_id ON (school_destination_id)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  KELOMPOK C: TABEL VERIFIKASI (4 JALUR)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-┌─────────────────────────────────────────────────────────────┐
-│ VERIFICATION_AFIRMASI                                       │
-├──────────────────┬──────────────────┬───────────────────────┤
-│ Kolom            │ Tipe Data        │ Keterangan            │
-├──────────────────┼──────────────────┼───────────────────────┤
-│ id               │ SERIAL           │ PRIMARY KEY           │
-│ registration_id  │ INT              │ FK →                  │
-│                  │                  │ REGISTRATIONS_        │
-│                  │                  │ AFIRMASI(id)          │
-│ operator_id      │ INT              │ FK → OFFICE_USERS(id) │
-│ action           │ VARCHAR(50)      │ approve/reject/pending│
-│ created_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ alasan_batal     │ TEXT             │ Alasan jika ditolak   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ VERIFICATION_AFIRMASI                                           │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│ Kolom            │ Tipe Data        │ Constraint / Keterangan   │
+├──────────────────┼──────────────────┼───────────────────────────┤
+│ id               │ SERIAL           │ PRIMARY KEY               │
+│ registration_id  │ INT              │ NOT NULL, UNIQUE          │
+│                  │                  │ FK →                      │
+│                  │                  │ REGISTRATIONS_AFIRMASI(id)│
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE CASCADE         │
+│ operator_id      │ INT              │ NOT NULL                  │
+│                  │                  │ FK → OFFICE_USERS(id)     │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE RESTRICT        │
+│ action           │ VARCHAR(50)      │ approve/reject/pending    │
+│ created_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ alasan_batal     │ TEXT             │ Alasan jika ditolak       │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_ver_afirmasi_operator_id ON (operator_id)
+  Catatan: registration_id UNIQUE → relasi 1-ke-1 dengan registrasi
 
-┌─────────────────────────────────────────────────────────────┐
-│ VERIFICATION_MUTASI                                         │
-├──────────────────┬──────────────────┬───────────────────────┤
-│ Kolom            │ Tipe Data        │ Keterangan            │
-├──────────────────┼──────────────────┼───────────────────────┤
-│ id               │ SERIAL           │ PRIMARY KEY           │
-│ registration_id  │ INT              │ FK →                  │
-│                  │                  │ REGISTRATIONS_        │
-│                  │                  │ MUTASI(id)            │
-│ operator_id      │ INT              │ FK → OFFICE_USERS(id) │
-│ action           │ VARCHAR(50)      │ approve/reject/pending│
-│ created_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ alasan_batal     │ TEXT             │ Alasan jika ditolak   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ VERIFICATION_MUTASI                                             │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│ Kolom            │ Tipe Data        │ Constraint / Keterangan   │
+├──────────────────┼──────────────────┼───────────────────────────┤
+│ id               │ SERIAL           │ PRIMARY KEY               │
+│ registration_id  │ INT              │ NOT NULL, UNIQUE          │
+│                  │                  │ FK →                      │
+│                  │                  │ REGISTRATIONS_MUTASI(id)  │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE CASCADE         │
+│ operator_id      │ INT              │ NOT NULL                  │
+│                  │                  │ FK → OFFICE_USERS(id)     │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE RESTRICT        │
+│ action           │ VARCHAR(50)      │ approve/reject/pending    │
+│ created_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ alasan_batal     │ TEXT             │ Alasan jika ditolak       │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_ver_mutasi_operator_id ON (operator_id)
 
-┌─────────────────────────────────────────────────────────────┐
-│ VERIFICATION_PRESTASI_MANDIRI                               │
-├──────────────────┬──────────────────┬───────────────────────┤
-│ Kolom            │ Tipe Data        │ Keterangan            │
-├──────────────────┼──────────────────┼───────────────────────┤
-│ id               │ SERIAL           │ PRIMARY KEY           │
-│ registration_id  │ INT              │ FK →                  │
-│                  │                  │ REGISTRATIONS_        │
-│                  │                  │ PRESTASI_MANDIRI(id)  │
-│ operator_id      │ INT              │ FK → OFFICE_USERS(id) │
-│ action           │ VARCHAR(50)      │ approve/reject/pending│
-│ created_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ alasan_batal     │ TEXT             │ Alasan jika ditolak   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ VERIFICATION_PRESTASI_MANDIRI                                   │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│ Kolom            │ Tipe Data        │ Constraint / Keterangan   │
+├──────────────────┼──────────────────┼───────────────────────────┤
+│ id               │ SERIAL           │ PRIMARY KEY               │
+│ registration_id  │ INT              │ NOT NULL, UNIQUE          │
+│                  │                  │ FK →                      │
+│                  │                  │ REGISTRATIONS_PRESTASI_   │
+│                  │                  │ MANDIRI(id)               │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE CASCADE         │
+│ operator_id      │ INT              │ NOT NULL                  │
+│                  │                  │ FK → OFFICE_USERS(id)     │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE RESTRICT        │
+│ action           │ VARCHAR(50)      │ approve/reject/pending    │
+│ created_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ alasan_batal     │ TEXT             │ Alasan jika ditolak       │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_ver_prestasi_operator_id ON (operator_id)
 
-┌─────────────────────────────────────────────────────────────┐
-│ VERIFICATION_ZONASI                                         │
-├──────────────────┬──────────────────┬───────────────────────┤
-│ Kolom            │ Tipe Data        │ Keterangan            │
-├──────────────────┼──────────────────┼───────────────────────┤
-│ id               │ SERIAL           │ PRIMARY KEY           │
-│ registration_id  │ INT              │ FK →                  │
-│                  │                  │ REGISTRATIONS_        │
-│                  │                  │ ZONASI(id)            │
-│ operator_id      │ INT              │ FK → OFFICE_USERS(id) │
-│ action           │ VARCHAR(50)      │ approve/reject/pending│
-│ created_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ alasan_batal     │ TEXT             │ Alasan jika ditolak   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ VERIFICATION_ZONASI                                             │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│ Kolom            │ Tipe Data        │ Constraint / Keterangan   │
+├──────────────────┼──────────────────┼───────────────────────────┤
+│ id               │ SERIAL           │ PRIMARY KEY               │
+│ registration_id  │ INT              │ NOT NULL, UNIQUE          │
+│                  │                  │ FK →                      │
+│                  │                  │ REGISTRATIONS_ZONASI(id)  │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE CASCADE         │
+│ operator_id      │ INT              │ NOT NULL                  │
+│                  │                  │ FK → OFFICE_USERS(id)     │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE RESTRICT        │
+│ action           │ VARCHAR(50)      │ approve/reject/pending    │
+│ created_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ alasan_batal     │ TEXT             │ Alasan jika ditolak       │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_ver_zonasi_operator_id ON (operator_id)
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  KELOMPOK D: TABEL PENERIMAAN (4 JALUR)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-┌─────────────────────────────────────────────────────────────┐
-│ PENERIMAAN_AFIRMASI                                         │
-├──────────────────┬──────────────────┬───────────────────────┤
-│ Kolom            │ Tipe Data        │ Keterangan            │
-├──────────────────┼──────────────────┼───────────────────────┤
-│ id               │ SERIAL           │ PRIMARY KEY           │
-│ verification_id  │ INT              │ FK →                  │
-│                  │                  │ VERIFICATION_         │
-│                  │                  │ AFIRMASI(id)          │
-│ kepsek_id        │ INT              │ FK → OFFICE_USERS(id) │
-│                  │                  │ [Kepala Sekolah]      │
-│ created_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ code             │ VARCHAR(100)     │ UNIQUE, Kode terima   │
-│ seen_at          │ TIMESTAMP        │ Waktu dilihat siswa   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ PENERIMAAN_AFIRMASI                                             │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│ Kolom            │ Tipe Data        │ Constraint / Keterangan   │
+├──────────────────┼──────────────────┼───────────────────────────┤
+│ id               │ SERIAL           │ PRIMARY KEY               │
+│ verification_id  │ INT              │ NOT NULL, UNIQUE          │
+│                  │                  │ FK →                      │
+│                  │                  │ VERIFICATION_AFIRMASI(id) │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE CASCADE         │
+│ kepsek_id        │ INT              │ nullable                  │
+│                  │                  │ FK → OFFICE_USERS(id)     │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE SET NULL        │
+│                  │                  │ [Khusus jalur afirmasi]   │
+│ created_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ code             │ VARCHAR(100)     │ UNIQUE, Kode penerimaan   │
+│ seen_at          │ TIMESTAMP        │ Waktu dilihat siswa       │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_penerimaan_afirmasi_kepsek_id ON (kepsek_id)
+  Catatan: verification_id UNIQUE → relasi 1-ke-1 dengan verifikasi
+           kepsek_id nullable karena ON DELETE SET NULL
 
-┌─────────────────────────────────────────────────────────────┐
-│ PENERIMAAN_MUTASI                                           │
-├──────────────────┬──────────────────┬───────────────────────┤
-│ Kolom            │ Tipe Data        │ Keterangan            │
-├──────────────────┼──────────────────┼───────────────────────┤
-│ id               │ SERIAL           │ PRIMARY KEY           │
-│ created_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ verification_id  │ INT              │ FK →                  │
-│                  │                  │ VERIFICATION_         │
-│                  │                  │ MUTASI(id)            │
-│ code             │ VARCHAR(100)     │ UNIQUE, Kode terima   │
-│ seen_at          │ TIMESTAMP        │ Waktu dilihat siswa   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ PENERIMAAN_MUTASI                                               │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│ Kolom            │ Tipe Data        │ Constraint / Keterangan   │
+├──────────────────┼──────────────────┼───────────────────────────┤
+│ id               │ SERIAL           │ PRIMARY KEY               │
+│ created_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ verification_id  │ INT              │ NOT NULL, UNIQUE          │
+│                  │                  │ FK →                      │
+│                  │                  │ VERIFICATION_MUTASI(id)   │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE CASCADE         │
+│ code             │ VARCHAR(100)     │ UNIQUE, Kode penerimaan   │
+│ seen_at          │ TIMESTAMP        │ Waktu dilihat siswa       │
+└─────────────────────────────────────────────────────────────────┘
 
-┌─────────────────────────────────────────────────────────────┐
-│ PENERIMAAN_PRESTASI_MANDIRI                                 │
-├──────────────────┬──────────────────┬───────────────────────┤
-│ Kolom            │ Tipe Data        │ Keterangan            │
-├──────────────────┼──────────────────┼───────────────────────┤
-│ id               │ SERIAL           │ PRIMARY KEY           │
-│ npsn             │ VARCHAR(20)      │ FK → SCHOOLS(npsn)    │
-│                  │                  │ [Sekolah penerima]    │
-│ verification_id  │ INT              │ FK →                  │
-│                  │                  │ VERIFICATION_PRESTASI │
-│                  │                  │ _MANDIRI(id)          │
-│ code             │ VARCHAR(100)     │ UNIQUE, Kode terima   │
-│ seen_at          │ TIMESTAMP        │ Waktu dilihat siswa   │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ PENERIMAAN_PRESTASI_MANDIRI                                     │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│ Kolom            │ Tipe Data        │ Constraint / Keterangan   │
+├──────────────────┼──────────────────┼───────────────────────────┤
+│ id               │ SERIAL           │ PRIMARY KEY               │
+│ npsn             │ VARCHAR(20)      │ NOT NULL                  │
+│                  │                  │ FK → SCHOOLS(npsn)        │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE RESTRICT        │
+│                  │                  │ [Sekolah penerima]        │
+│ verification_id  │ INT              │ NOT NULL, UNIQUE          │
+│                  │                  │ FK →                      │
+│                  │                  │ VERIFICATION_PRESTASI_    │
+│                  │                  │ MANDIRI(id)               │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE CASCADE         │
+│ code             │ VARCHAR(100)     │ UNIQUE, Kode penerimaan   │
+│ seen_at          │ TIMESTAMP        │ Waktu dilihat siswa       │
+└─────────────────────────────────────────────────────────────────┘
+  Index: idx_penerimaan_prestasi_npsn ON (npsn)
+  Catatan: TIDAK memiliki created_at dan updated_at
+           Memiliki kolom npsn FK → SCHOOLS(npsn) yang unik
+           di antara tabel penerimaan lainnya
 
-┌─────────────────────────────────────────────────────────────┐
-│ PENERIMAAN_ZONASI                                           │
-├──────────────────┬──────────────────┬───────────────────────┤
-│ Kolom            │ Tipe Data        │ Keterangan            │
-├──────────────────┼──────────────────┼───────────────────────┤
-│ id               │ SERIAL           │ PRIMARY KEY           │
-│ created_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()         │
-│ verification_id  │ INT              │ FK →                  │
-│                  │                  │ VERIFICATION_         │
-│                  │                  │ ZONASI(id)            │
-│ code             │ VARCHAR(100)     │ UNIQUE, Kode terima   │
-│ seen_at          │ TIMESTAMP        │ Waktu dilihat siswa   │
-└─────────────────────────────────────────────────────────────┘
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- RINGKASAN FOREIGN KEY SELURUH DATABASE
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  Tabel Asal                       Kolom FK               → Tabel Tujuan
-  ─────────────────────────────────────────────────────────────────────
-  OFFICE_USERS                     role_id                → ROLES(id)
-  SCHOOL_USERS                     office_user_username   → OFFICE_USERS(username)
-  SCHOOL_USERS                     school_npsn            → SCHOOLS(npsn)
-  USERS                            npsn                   → JUNIOR_SCHOOLS(npsn)
-  USERS                            school_destination_id  → SCHOOLS(id)
-  REGISTRATIONS_AFIRMASI           user_id                → USERS(id)
-  REGISTRATIONS_AFIRMASI           school_destination_id  → SCHOOLS(id)
-  REGISTRATIONS_MUTASI             user_id                → USERS(id)
-  REGISTRATIONS_MUTASI             school_destination_id  → SCHOOLS(id)
-  REGISTRATIONS_PRESTASI_MANDIRI   user_id                → USERS(id)
-  REGISTRATIONS_PRESTASI_MANDIRI   school_destination_id  → SCHOOLS(id)
-  REGISTRATIONS_ZONASI             user_id                → USERS(id)
-  REGISTRATIONS_ZONASI             school_destination_id  → SCHOOLS(id)
-  VERIFICATION_AFIRMASI            registration_id        → REGISTRATIONS_AFIRMASI(id)
-  VERIFICATION_AFIRMASI            operator_id            → OFFICE_USERS(id)
-  VERIFICATION_MUTASI              registration_id        → REGISTRATIONS_MUTASI(id)
-  VERIFICATION_MUTASI              operator_id            → OFFICE_USERS(id)
-  VERIFICATION_PRESTASI_MANDIRI    registration_id        → REGISTRATIONS_PRESTASI_MANDIRI(id)
-  VERIFICATION_PRESTASI_MANDIRI    operator_id            → OFFICE_USERS(id)
-  VERIFICATION_ZONASI              registration_id        → REGISTRATIONS_ZONASI(id)
-  VERIFICATION_ZONASI              operator_id            → OFFICE_USERS(id)
-  PENERIMAAN_AFIRMASI              verification_id        → VERIFICATION_AFIRMASI(id)
-  PENERIMAAN_AFIRMASI              kepsek_id              → OFFICE_USERS(id)
-  PENERIMAAN_MUTASI                verification_id        → VERIFICATION_MUTASI(id)
-  PENERIMAAN_PRESTASI_MANDIRI      npsn                   → SCHOOLS(npsn)
-  PENERIMAAN_PRESTASI_MANDIRI      verification_id        → VERIFICATION_PRESTASI_MANDIRI(id)
-  PENERIMAAN_ZONASI                verification_id        → VERIFICATION_ZONASI(id)
+┌─────────────────────────────────────────────────────────────────┐
+│ PENERIMAAN_ZONASI                                               │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│ Kolom            │ Tipe Data        │ Constraint / Keterangan   │
+├──────────────────┼──────────────────┼───────────────────────────┤
+│ id               │ SERIAL           │ PRIMARY KEY               │
+│ created_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ updated_at       │ TIMESTAMP        │ DEFAULT NOW()             │
+│ verification_id  │ INT              │ NOT NULL, UNIQUE          │
+│                  │                  │ FK →                      │
+│                  │                  │ VERIFICATION_ZONASI(id)   │
+│                  │                  │ ON UPDATE CASCADE         │
+│                  │                  │ ON DELETE CASCADE         │
+│ code             │ VARCHAR(100)     │ UNIQUE, Kode penerimaan   │
+│ seen_at          │ TIMESTAMP        │ Waktu dilihat siswa       │
+└─────────────────────────────────────────────────────────────────┘
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- KOREKSI DARI SKEMA AWAL
+ PERBANDINGAN STRUKTUR ANTAR TABEL PENERIMAAN
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  No  Tabel                        Koreksi
-  ─────────────────────────────────────────────────────────────────
-  1   USERS.npsn                   FK → JUNIOR_SCHOOLS(npsn)
-                                   bukan teks biasa
-  2   PENERIMAAN_AFIRMASI          kepsek_id hanya ada di jalur
-                                   afirmasi, jalur lain TIDAK ada
-  3   PENERIMAAN_PRESTASI_MANDIRI  Memiliki kolom npsn sebagai FK
-                                   → SCHOOLS(npsn), berbeda dengan
-                                   jalur lain yang tidak punya
-  4   PENERIMAAN_PRESTASI_MANDIRI  Tidak memiliki created_at dan
-                                   updated_at (berbeda dgn jalur lain)
-  5   ERD [9] sebelumnya           Relasi "ditetapkan oleh" hanya
-                                   berlaku untuk PENERIMAAN_AFIRMASI
-                                   (kepsek_id), bukan semua jalur
+  Kolom              AFIRMASI   MUTASI   PRESTASI_MANDIRI   ZONASI
+  ────────────────────────────────────────────────────────────────
+  id                 ✅         ✅       ✅                 ✅
+  verification_id    ✅ UNIQUE   ✅UNIQUE ✅ UNIQUE          ✅ UNIQUE
+  code               ✅ UNIQUE   ✅UNIQUE ✅ UNIQUE          ✅ UNIQUE
+  seen_at            ✅         ✅       ✅                 ✅
+  created_at         ✅         ✅       ❌ Tidak ada        ✅
+  updated_at         ✅         ✅       ❌ Tidak ada        ✅
+  kepsek_id          ✅ Khusus  ❌       ❌                 ❌
+  npsn (FK Schools)  ❌         ❌       ✅ Khusus          ❌
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ RINGKASAN FOREIGN KEY DAN REFERENTIAL ACTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Tabel Asal                    Kolom FK               Tujuan                  ON DELETE
+  ──────────────────────────────────────────────────────────────────────────────────────
+  OFFICE_USERS                  role_id                ROLES(id)               RESTRICT
+  SCHOOL_USERS                  office_user_username   OFFICE_USERS(username)  CASCADE
+  SCHOOL_USERS                  school_npsn            SCHOOLS(npsn)           CASCADE
+  USERS                         npsn                   JUNIOR_SCHOOLS(npsn)    RESTRICT
+  USERS                         school_destination_id  SCHOOLS(id)             SET NULL
+  REGISTRATIONS_AFIRMASI        user_id                USERS(id)               CASCADE
+  REGISTRATIONS_AFIRMASI        school_destination_id  SCHOOLS(id)             RESTRICT
+  REGISTRATIONS_MUTASI          user_id                USERS(id)               CASCADE
+  REGISTRATIONS_MUTASI          school_destination_id  SCHOOLS(id)             RESTRICT
+  REGISTRATIONS_PRESTASI_MANDIRI user_id               USERS(id)               CASCADE
+  REGISTRATIONS_PRESTASI_MANDIRI school_destination_id SCHOOLS(id)             RESTRICT
+  REGISTRATIONS_ZONASI          user_id                USERS(id)               CASCADE
+  REGISTRATIONS_ZONASI          school_destination_id  SCHOOLS(id)             RESTRICT
+  VERIFICATION_AFIRMASI         registration_id        REG_AFIRMASI(id)        CASCADE
+  VERIFICATION_AFIRMASI         operator_id            OFFICE_USERS(id)        RESTRICT
+  VERIFICATION_MUTASI           registration_id        REG_MUTASI(id)          CASCADE
+  VERIFICATION_MUTASI           operator_id            OFFICE_USERS(id)        RESTRICT
+  VERIFICATION_PRESTASI_MANDIRI registration_id        REG_PRESTASI(id)        CASCADE
+  VERIFICATION_PRESTASI_MANDIRI operator_id            OFFICE_USERS(id)        RESTRICT
+  VERIFICATION_ZONASI           registration_id        REG_ZONASI(id)          CASCADE
+  VERIFICATION_ZONASI           operator_id            OFFICE_USERS(id)        RESTRICT
+  PENERIMAAN_AFIRMASI           verification_id        VER_AFIRMASI(id)        CASCADE
+  PENERIMAAN_AFIRMASI           kepsek_id              OFFICE_USERS(id)        SET NULL
+  PENERIMAAN_MUTASI             verification_id        VER_MUTASI(id)          CASCADE
+  PENERIMAAN_PRESTASI_MANDIRI   npsn                   SCHOOLS(npsn)           RESTRICT
+  PENERIMAAN_PRESTASI_MANDIRI   verification_id        VER_PRESTASI(id)        CASCADE
+  PENERIMAAN_ZONASI             verification_id        VER_ZONASI(id)          CASCADE
 ```
-
-
-# Letak kesalahan
-
-# Daftar Koreksi dari Skema Awal
 
 ---
 
-## Koreksi pada ERD (1.1)
+## 1.3 DDL Lengkap (PostgreSQL)
 
-### ❌ Salah (versi awal)
-```
-9. Relasi Petugas ke Penerimaan
-OFFICE_USER ||--o{ PENERIMAAN_AFIRMASI         : "ditetapkan oleh"
-OFFICE_USER ||--o{ PENERIMAAN_MUTASI           : "ditetapkan oleh"
-OFFICE_USER ||--o{ PENERIMAAN_PRESTASI_MANDIRI : "ditetapkan oleh"
-OFFICE_USER ||--o{ PENERIMAAN_ZONASI           : "ditetapkan oleh"
-```
+```sql
+-- ============================================================
+-- Pemicu 1: Polemik Masalah PPDB Online
+-- Skema Database PPDB - PostgreSQL
+-- ============================================================
 
-### ✅ Benar (versi koreksi)
-```
-[9] Kepala Sekolah ke Penerimaan Afirmasi (khusus afirmasi ada kepsek_id)
-    OFFICE_USERS ||──────────o{ PENERIMAAN_AFIRMASI : "ditetapkan oleh kepala sekolah"
+-- Drop tables in dependency order
+DROP TABLE IF EXISTS penerimaan_zonasi CASCADE;
+DROP TABLE IF EXISTS penerimaan_prestasi_mandiri CASCADE;
+DROP TABLE IF EXISTS penerimaan_mutasi CASCADE;
+DROP TABLE IF EXISTS penerimaan_afirmasi CASCADE;
+DROP TABLE IF EXISTS verification_zonasi CASCADE;
+DROP TABLE IF EXISTS verification_prestasi_mandiri CASCADE;
+DROP TABLE IF EXISTS verification_mutasi CASCADE;
+DROP TABLE IF EXISTS verification_afirmasi CASCADE;
+DROP TABLE IF EXISTS registrations_zonasi CASCADE;
+DROP TABLE IF EXISTS registrations_prestasi_mandiri CASCADE;
+DROP TABLE IF EXISTS registrations_mutasi CASCADE;
+DROP TABLE IF EXISTS registrations_afirmasi CASCADE;
+DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS school_users CASCADE;
+DROP TABLE IF EXISTS junior_schools CASCADE;
+DROP TABLE IF EXISTS office_users CASCADE;
+DROP TABLE IF EXISTS schools CASCADE;
+DROP TABLE IF EXISTS roles CASCADE;
 
-[10] Sekolah ke Penerimaan Prestasi Mandiri (via NPSN)
-    SCHOOLS ||──────────o{ PENERIMAAN_PRESTASI_MANDIRI : "tempat diterima"
-```
+-- ============================================================
+-- KELOMPOK A: MANAJEMEN PENGGUNA DAN SEKOLAH
+-- ============================================================
 
-**Alasan:** Kolom `kepsek_id` hanya ada di tabel `PENERIMAAN_AFIRMASI` saja. Tabel penerimaan lainnya (`mutasi`, `prestasi_mandiri`, `zonasi`) **tidak memiliki** kolom `kepsek_id`. Dan khusus `PENERIMAAN_PRESTASI_MANDIRI` memiliki relasi ke `SCHOOLS` via kolom `npsn`, bukan ke `OFFICE_USERS`.
+CREATE TABLE roles (
+    id         SERIAL PRIMARY KEY,
+    name       VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
----
+CREATE TABLE office_users (
+    id         SERIAL PRIMARY KEY,
+    name       VARCHAR(255) NOT NULL,
+    username   VARCHAR(100) NOT NULL UNIQUE,
+    password   VARCHAR(255) NOT NULL,
+    role_id    INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-## Koreksi pada Skema Relasional (1.2)
+    CONSTRAINT fk_office_users_roles
+        FOREIGN KEY (role_id)
+        REFERENCES roles(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
 
-### Koreksi 1 — Tabel `USERS`
+CREATE TABLE schools (
+    id                            SERIAL PRIMARY KEY,
+    name                          VARCHAR(255) NOT NULL,
+    kode                          VARCHAR(50),
+    npsn                          VARCHAR(20) NOT NULL UNIQUE,
+    minimum_average               DECIMAL(5,2),
+    city_id                       INT,
+    created_at                    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at                    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    latitude                      DECIMAL(10,7),
+    longitude                     DECIMAL(10,7),
+    pagu_afirmasi                 INT DEFAULT 0,
+    pagu_mutasi                   INT DEFAULT 0,
+    pagu_prestasi_undangan        INT DEFAULT 0,
+    pagu_zonasi                   INT DEFAULT 0,
+    pagu_prestasi_tesmandiri      INT DEFAULT 0,
+    pagu_tidak_naik_kelas         INT DEFAULT 0,
+    school_code                   VARCHAR(20),
+    kebijakan_sisa_pagu_afirmasi  TEXT,
+    kebijakan_sisa_pagu_mutasi    TEXT,
+    kebijakan_sisa_pagu_undangan  TEXT,
+    kebijakan_sisa_pagu_zonasi    TEXT
+);
 
-#### ❌ Salah (versi awal)
-```
-USERS (
-    npsn   -- tidak dijelaskan sebagai FK
-    ...
-)
-```
+CREATE TABLE school_users (
+    id                   SERIAL PRIMARY KEY,
+    office_user_username VARCHAR(100) NOT NULL,
+    school_npsn          VARCHAR(20)  NOT NULL,
 
-#### ✅ Benar (versi koreksi)
-```
-USERS (
-    npsn  VARCHAR(20)  FK → JUNIOR_SCHOOLS(npsn)
-    ...
-)
-```
+    CONSTRAINT fk_school_users_office_users
+        FOREIGN KEY (office_user_username)
+        REFERENCES office_users(username)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
-**Alasan:** Kolom `npsn` di tabel `USERS` merujuk ke sekolah asal siswa (SMP), sehingga harus menjadi **Foreign Key** ke tabel `JUNIOR_SCHOOLS(npsn)`.
+    CONSTRAINT fk_school_users_schools
+        FOREIGN KEY (school_npsn)
+        REFERENCES schools(npsn)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
----
+    CONSTRAINT uq_school_users_assignment
+        UNIQUE (office_user_username, school_npsn)
+);
 
-### Koreksi 2 — Tabel `PENERIMAAN_AFIRMASI`
+CREATE TABLE junior_schools (
+    id         SERIAL PRIMARY KEY,
+    npsn       VARCHAR(20)  NOT NULL UNIQUE,
+    name       VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
-#### ❌ Salah (versi awal)
-```
-PENERIMAAN_AFIRMASI (
-    kepsek_id  -- tidak dijelaskan konteksnya
-)
-```
+CREATE TABLE users (
+    id                    SERIAL PRIMARY KEY,
+    npsn                  VARCHAR(20)  NOT NULL,
+    nisn                  VARCHAR(20)  NOT NULL UNIQUE,
+    birth_date            DATE,
+    name                  VARCHAR(255) NOT NULL,
+    gender                VARCHAR(10),
+    address               TEXT,
+    phone                 VARCHAR(20),
+    school_name           VARCHAR(255),
+    cluster               VARCHAR(100),
+    created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    school_destination_id INT,
+    latitude              DECIMAL(10,7),
+    longitude             DECIMAL(10,7),
+    registration_1_type   VARCHAR(50),
+    registration_2_type   VARCHAR(50),
+    registration_3_type   VARCHAR(50),
+    registration_1_id     INT,
+    registration_2_id     INT,
+    registration_3_id     INT,
+    acceptance_type       VARCHAR(50),
+    acceptance_id         INT,
+    deleted_at            TIMESTAMP,
+    jalur_prestasi        VARCHAR(100),
 
-#### ✅ Benar (versi koreksi)
-```
-PENERIMAAN_AFIRMASI (
-    kepsek_id  INT  FK → OFFICE_USERS(id)  [Kepala Sekolah]
-)
-```
+    CONSTRAINT chk_users_gender
+        CHECK (gender IS NULL OR gender IN ('L', 'P')),
 
-**Alasan:** Perlu ditegaskan bahwa `kepsek_id` adalah FK ke `OFFICE_USERS` dan **hanya ada di jalur afirmasi**, tidak di jalur lain.
+    CONSTRAINT fk_users_junior_schools
+        FOREIGN KEY (npsn)
+        REFERENCES junior_schools(npsn)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
 
----
+    CONSTRAINT fk_users_schools
+        FOREIGN KEY (school_destination_id)
+        REFERENCES schools(id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+);
 
-### Koreksi 3 — Tabel `PENERIMAAN_PRESTASI_MANDIRI`
+-- ============================================================
+-- KELOMPOK B: TABEL REGISTRASI
+-- ============================================================
 
-#### ❌ Salah (versi awal)
-```
-PENERIMAAN_PRESTASI_MANDIRI (
-    id PK,
-    npsn,          -- tidak dijelaskan sebagai FK
-    verification_id FK -> VERIFICATION_PRESTASI_MANDIRI.id,
-    code,
-    seen_at
-)
-```
+CREATE TABLE registrations_afirmasi (
+    id                    SERIAL PRIMARY KEY,
+    user_id               INT NOT NULL,
+    jenis                 VARCHAR(100),
+    school_destination_id INT NOT NULL,
+    distance              DECIMAL(10,2),
+    verification_schedule TIMESTAMP,
+    status                VARCHAR(50),
+    created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    documents             TEXT,
 
-#### ✅ Benar (versi koreksi)
-```
-PENERIMAAN_PRESTASI_MANDIRI (
-    id               SERIAL        PRIMARY KEY
-    npsn             VARCHAR(20)   FK → SCHOOLS(npsn)   ← ditambahkan
-    verification_id  INT           FK → VERIFICATION_PRESTASI_MANDIRI(id)
-    code             VARCHAR(100)  UNIQUE
-    seen_at          TIMESTAMP
-    -- TIDAK ADA created_at dan updated_at              ← ditegaskan
-)
-```
+    CONSTRAINT fk_reg_afirmasi_users
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
-**Alasan:**
-- Kolom `npsn` harus dijelaskan sebagai **FK ke `SCHOOLS(npsn)`**
-- Tabel ini **tidak memiliki** `created_at` dan `updated_at`, berbeda dengan tabel penerimaan lainnya
+    CONSTRAINT fk_reg_afirmasi_schools
+        FOREIGN KEY (school_destination_id)
+        REFERENCES schools(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
 
----
+CREATE TABLE registrations_mutasi (
+    id                    SERIAL PRIMARY KEY,
+    user_id               INT NOT NULL,
+    jenis                 VARCHAR(100),
+    school_destination_id INT NOT NULL,
+    distance              DECIMAL(10,2),
+    verification_schedule TIMESTAMP,
+    status                VARCHAR(50),
+    created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    documents             TEXT,
 
-### Koreksi 4 — Perbedaan Struktur Antar Tabel Penerimaan
+    CONSTRAINT fk_reg_mutasi_users
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
-#### ❌ Salah (versi awal)
-```
--- Tidak dijelaskan perbedaan struktur antar tabel penerimaan
-```
+    CONSTRAINT fk_reg_mutasi_schools
+        FOREIGN KEY (school_destination_id)
+        REFERENCES schools(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
 
-#### ✅ Benar (versi koreksi)
+CREATE TABLE registrations_prestasi_mandiri (
+    id                    SERIAL PRIMARY KEY,
+    user_id               INT NOT NULL,
+    data                  TEXT,
+    school_destination_id INT NOT NULL,
+    distance              DECIMAL(10,2),
+    verification_schedule TIMESTAMP,
+    status                VARCHAR(50),
+    created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    documents             TEXT,
+    test_number           VARCHAR(50),
+    final_score           DECIMAL(5,2),
+    test_score            DECIMAL(5,2),
+    jurusan               VARCHAR(100),
+    ruang_tes             VARCHAR(50),
 
-| Kolom | PENERIMAAN_AFIRMASI | PENERIMAAN_MUTASI | PENERIMAAN_PRESTASI_MANDIRI | PENERIMAAN_ZONASI |
-|---|---|---|---|---|
-| `id` | ✅ | ✅ | ✅ | ✅ |
-| `verification_id` | ✅ | ✅ | ✅ | ✅ |
-| `code` | ✅ | ✅ | ✅ | ✅ |
-| `seen_at` | ✅ | ✅ | ✅ | ✅ |
-| `created_at` | ✅ | ✅ | ❌ Tidak ada | ✅ |
-| `updated_at` | ✅ | ✅ | ❌ Tidak ada | ✅ |
-| `kepsek_id` | ✅ Khusus | ❌ | ❌ | ❌ |
-| `npsn` | ❌ | ❌ | ✅ Khusus | ❌ |
+    CONSTRAINT fk_reg_prestasi_users
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
----
+    CONSTRAINT fk_reg_prestasi_schools
+        FOREIGN KEY (school_destination_id)
+        REFERENCES schools(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
 
-## Ringkasan Semua Koreksi
+CREATE TABLE registrations_zonasi (
+    id                    SERIAL PRIMARY KEY,
+    user_id               INT NOT NULL,
+    school_destination_id INT NOT NULL,
+    distance              DECIMAL(10,2),
+    verification_schedule TIMESTAMP,
+    status                VARCHAR(50),
+    created_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    documents             TEXT,
+    kk_date               DATE,
 
-```
-No  Bagian            Yang Dikoreksi
-────────────────────────────────────────────────────────────────
-1   ERD Relasi [9]    Relasi kepsek_id hanya untuk
-                      PENERIMAAN_AFIRMASI, bukan semua jalur
+    CONSTRAINT fk_reg_zonasi_users
+        FOREIGN KEY (user_id)
+        REFERENCES users(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
-2   ERD Relasi [10]   Ditambahkan relasi baru:
-                      SCHOOLS → PENERIMAAN_PRESTASI_MANDIRI
-                      via kolom npsn
+    CONSTRAINT fk_reg_zonasi_schools
+        FOREIGN KEY (school_destination_id)
+        REFERENCES schools(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
 
-3   USERS.npsn        Ditegaskan sebagai FK →
-                      JUNIOR_SCHOOLS(npsn)
+-- ============================================================
+-- KELOMPOK C: TABEL VERIFIKASI
+-- ============================================================
 
-4   PENERIMAAN_       Ditegaskan kepsek_id adalah FK →
-    AFIRMASI          OFFICE_USERS(id) dan hanya ada
-                      di jalur ini
+CREATE TABLE verification_afirmasi (
+    id              SERIAL PRIMARY KEY,
+    registration_id INT NOT NULL UNIQUE,
+    operator_id     INT NOT NULL,
+    action          VARCHAR(50),
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    alasan_batal    TEXT,
 
-5   PENERIMAAN_       npsn ditegaskan sebagai FK →
-    PRESTASI_MANDIRI  SCHOOLS(npsn)
+    CONSTRAINT fk_ver_afirmasi_reg
+        FOREIGN KEY (registration_id)
+        REFERENCES registrations_afirmasi(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
 
-6   PENERIMAAN_       Ditegaskan TIDAK memiliki
-    PRESTASI_MANDIRI  created_at dan updated_at
+    CONSTRAINT fk_ver_afirmasi_operator
+        FOREIGN KEY (operator_id)
+        REFERENCES office_users(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE verification_mutasi (
+    id              SERIAL PRIMARY KEY,
+    registration_id INT NOT NULL UNIQUE,
+    operator_id     INT NOT NULL,
+    action          VARCHAR(50),
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    alasan_batal    TEXT,
+
+    CONSTRAINT fk_ver_mutasi_reg
+        FOREIGN KEY (registration_id)
+        REFERENCES registrations_mutasi(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_ver_mutasi_operator
+        FOREIGN KEY (operator_id)
+        REFERENCES office_users(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE verification_prestasi_mandiri (
+    id              SERIAL PRIMARY KEY,
+    registration_id INT NOT NULL UNIQUE,
+    operator_id     INT NOT NULL,
+    action          VARCHAR(50),
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    alasan_batal    TEXT,
+
+    CONSTRAINT fk_ver_prestasi_reg
+        FOREIGN KEY (registration_id)
+        REFERENCES registrations_prestasi_mandiri(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_ver_prestasi_operator
+        FOREIGN KEY (operator_id)
+        REFERENCES office_users(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+CREATE TABLE verification_zonasi (
+    id              SERIAL PRIMARY KEY,
+    registration_id INT NOT NULL UNIQUE,
+    operator_id     INT NOT NULL,
+    action          VARCHAR(50),
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    alasan_batal    TEXT,
+
+    CONSTRAINT fk_ver_zonasi_reg
+        FOREIGN KEY (registration_id)
+        REFERENCES registrations_zonasi(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_ver_zonasi_operator
+        FOREIGN KEY (operator_id)
+        REFERENCES office_users(id)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+-- ============================================================
+-- KELOMPOK D: TABEL PENERIMAAN
+-- ============================================================
+
+CREATE TABLE penerimaan_afirmasi (
+    id              SERIAL PRIMARY KEY,
+    verification_id INT NOT NULL UNIQUE,
+    kepsek_id       INT,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    code            VARCHAR(100) UNIQUE,
+    seen_at         TIMESTAMP,
+
+    CONSTRAINT fk_penerimaan_afirmasi_ver
+        FOREIGN KEY (verification_id)
+        REFERENCES verification_afirmasi(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE,
+
+    CONSTRAINT fk_penerimaan_afirmasi_kepsek
+        FOREIGN KEY (kepsek_id)
+        REFERENCES office_users(id)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+);
+
+CREATE TABLE penerimaan_mutasi (
+    id              SERIAL PRIMARY KEY,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verification_id INT NOT NULL UNIQUE,
+    code            VARCHAR(100) UNIQUE,
+    seen_at         TIMESTAMP,
+
+    CONSTRAINT fk_penerimaan_mutasi_ver
+        FOREIGN KEY (verification_id)
+        REFERENCES verification_mutasi(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+CREATE TABLE penerimaan_prestasi_mandiri (
+    id              SERIAL PRIMARY KEY,
+    npsn            VARCHAR(20) NOT NULL,
+    verification_id INT NOT NULL UNIQUE,
+    code            VARCHAR(100) UNIQUE,
+    seen_at         TIMESTAMP,
+
+    CONSTRAINT fk_penerimaan_prestasi_school
+        FOREIGN KEY (npsn)
+        REFERENCES schools(npsn)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+
+    CONSTRAINT fk_penerimaan_prestasi_ver
+        FOREIGN KEY (verification_id)
+        REFERENCES verification_prestasi_mandiri(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+CREATE TABLE penerimaan_zonasi (
+    id              SERIAL PRIMARY KEY,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    verification_id INT NOT NULL UNIQUE,
+    code            VARCHAR(100) UNIQUE,
+    seen_at         TIMESTAMP,
+
+    CONSTRAINT fk_penerimaan_zonasi_ver
+        FOREIGN KEY (verification_id)
+        REFERENCES verification_zonasi(id)
+        ON UPDATE CASCADE
+        ON DELETE CASCADE
+);
+
+-- ============================================================
+-- INDEX UNTUK OPTIMASI QUERY
+-- ============================================================
+
+-- Kelompok A
+CREATE INDEX idx_office_users_role_id
+    ON office_users(role_id);
+CREATE INDEX idx_school_users_office_user_username
+    ON school_users(office_user_username);
+CREATE INDEX idx_school_users_school_npsn
+    ON school_users(school_npsn);
+CREATE INDEX idx_users_npsn
+    ON users(npsn);
+CREATE INDEX idx_users_school_destination_id
+    ON users(school_destination_id);
+
+-- Kelompok B
+CREATE INDEX idx_reg_afirmasi_user_id
+    ON registrations_afirmasi(user_id);
+CREATE INDEX idx_reg_afirmasi_school_destination_id
+    ON registrations_afirmasi(school_destination_id);
+CREATE INDEX idx_reg_mutasi_user_id
+    ON registrations_mutasi(user_id);
+CREATE INDEX idx_reg_mutasi_school_destination_id
+    ON registrations_mutasi(school_destination_id);
+CREATE INDEX idx_reg_prestasi_user_id
+    ON registrations_prestasi_mandiri(user_id);
+CREATE INDEX idx_reg_prestasi_school_destination_id
+    ON registrations_prestasi_mandiri(school_destination_id);
+CREATE INDEX idx_reg_zonasi_user_id
+    ON registrations_zonasi(user_id);
+CREATE INDEX idx_reg_zonasi_school_destination_id
+    ON registrations_zonasi(school_destination_id);
+
+-- Kelompok C
+CREATE INDEX idx_ver_afirmasi_operator_id
+    ON verification_afirmasi(operator_id);
+CREATE INDEX idx_ver_mutasi_operator_id
+    ON verification_mutasi(operator_id);
+CREATE INDEX idx_ver_prestasi_operator_id
+    ON verification_prestasi_mandiri(operator_id);
+CREATE INDEX idx_ver_zonasi_operator_id
+    ON verification_zonasi(operator_id);
+
+-- Kelompok D
+CREATE INDEX idx_penerimaan_afirmasi_kepsek_id
+    ON penerimaan_afirmasi(kepsek_id);
+CREATE INDEX idx_penerimaan_prestasi_npsn
+    ON penerimaan_prestasi_mandiri(npsn);
 ```
