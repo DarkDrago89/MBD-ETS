@@ -1,1211 +1,1478 @@
-# BAGIAN 2: DDL DAN DATA DUMMY
+# Data Dummy untuk Simulasi Masalah PPDB
 
-## 2.1 Data Dummy - Kelompok A
+## Konsep Kerusakan Data yang Akan Dibuat
 
-### 2.1.1 Insert Data Roles
-
-```sql
--- ============================================================
--- INSERT DATA DUMMY
--- ============================================================
-
--- ============================================================
--- KELOMPOK A: MANAJEMEN PENGGUNA DAN SEKOLAH
--- ============================================================
-
--- Roles (10 data)
-INSERT INTO roles (name) VALUES
-('Super Admin'),
-('Admin Provinsi'),
-('Operator Sekolah'),
-('Kepala Sekolah'),
-('Verifikator'),
-('Staff Dinas'),
-('Koordinator PPDB'),
-('Helpdesk'),
-('Monitoring'),
-('Audit');
 ```
+Jenis Kerusakan yang Disimulasikan:
 
-### 2.1.2 Insert Data Office Users
+KERUSAKAN 1: Approved tapi tidak ada penerimaan
+  → Verifikasi action='approved' tapi tidak ada 
+    record di tabel penerimaan
 
-```sql
--- Office Users (50 data)
-INSERT INTO office_users (name, username, password, role_id) VALUES
-('Ahmad Syamsuddin',   'ahmad.syams',   md5('Pass@001'), 1),
-('Budi Santoso',       'budi.santoso',  md5('Pass@002'), 2),
-('Citra Dewi',         'citra.dewi',    md5('Pass@003'), 3),
-('Dewi Rahayu',        'dewi.rahayu',   md5('Pass@004'), 4),
-('Eko Prasetyo',       'eko.prasetyo',  md5('Pass@005'), 3),
-('Fatimah Zahra',      'fatimah.zahra', md5('Pass@006'), 3),
-('Gunawan Wibowo',     'gunawan.wib',   md5('Pass@007'), 4),
-('Hesti Kurniawati',   'hesti.kurnia',  md5('Pass@008'), 3),
-('Irwan Hidayat',      'irwan.hidayat', md5('Pass@009'), 3),
-('Joko Susilo',        'joko.susilo',   md5('Pass@010'), 4),
-('Kartini Lestari',    'kartini.lest',  md5('Pass@011'), 3),
-('Lukman Hakim',       'lukman.hakim',  md5('Pass@012'), 4),
-('Mira Sari',          'mira.sari',     md5('Pass@013'), 3),
-('Nurul Fadilah',      'nurul.fadil',   md5('Pass@014'), 3),
-('Oki Setiawan',       'oki.setiawan',  md5('Pass@015'), 5),
-('Putri Handayani',    'putri.hand',    md5('Pass@016'), 3),
-('Qodir Mahmud',       'qodir.mahm',    md5('Pass@017'), 4),
-('Rizky Aditya',       'rizky.aditya',  md5('Pass@018'), 3),
-('Siti Aminah',        'siti.aminah',   md5('Pass@019'), 3),
-('Teguh Santoso',      'teguh.sant',    md5('Pass@020'), 5),
-('Ulfah Ramadhani',    'ulfah.ramad',   md5('Pass@021'), 3),
-('Vicky Nugraha',      'vicky.nugra',   md5('Pass@022'), 4),
-('Wahyu Hidayah',      'wahyu.hiday',   md5('Pass@023'), 3),
-('Xena Pratiwi',       'xena.prati',    md5('Pass@024'), 3),
-('Yoga Purnama',       'yoga.purnam',   md5('Pass@025'), 4),
-('Zulkifli Ahmad',     'zulkifli.ah',   md5('Pass@026'), 3),
-('Arini Soekamto',     'arini.soeka',   md5('Pass@027'), 3),
-('Bagas Pradipta',     'bagas.pradi',   md5('Pass@028'), 5),
-('Candra Wulandari',   'candra.wulan',  md5('Pass@029'), 3),
-('Dian Pertiwi',       'dian.pertiw',   md5('Pass@030'), 4),
-('Edo Firmansyah',     'edo.firman',    md5('Pass@031'), 3),
-('Fitri Andriani',     'fitri.andri',   md5('Pass@032'), 3),
-('Galuh Kusuma',       'galuh.kusum',   md5('Pass@033'), 4),
-('Hendra Wijaya',      'hendra.wija',   md5('Pass@034'), 3),
-('Ika Rosdiana',       'ika.rosdian',   md5('Pass@035'), 3),
-('Jamal Udin',         'jamal.udin',    md5('Pass@036'), 5),
-('Khairul Anam',       'khairul.an',    md5('Pass@037'), 3),
-('Lia Agustina',       'lia.agustin',   md5('Pass@038'), 4),
-('Mirza Fauzan',       'mirza.fauz',    md5('Pass@039'), 3),
-('Nadia Permata',      'nadia.perma',   md5('Pass@040'), 3),
-('Oscar Darmawan',     'oscar.darma',   md5('Pass@041'), 5),
-('Prima Yuda',         'prima.yuda',    md5('Pass@042'), 3),
-('Qurrata Ain',        'qurrata.ain',   md5('Pass@043'), 4),
-('Rafi Maulana',       'rafi.maulan',   md5('Pass@044'), 3),
-('Salsabila Nur',      'salsabila.n',   md5('Pass@045'), 3),
-('Taufik Ismail',      'taufik.isma',   md5('Pass@046'), 5),
-('Ummu Kalsum',        'ummu.kalsum',   md5('Pass@047'), 3),
-('Vindra Adi',         'vindra.adi',    md5('Pass@048'), 4),
-('Widya Astuti',       'widya.astu',    md5('Pass@049'), 3),
-('Yusuf Mansyur',      'yusuf.mans',    md5('Pass@050'), 3);
-```
+KERUSAKAN 2: Penerimaan ada tapi status registrasi 
+             masih 'submitted' (tidak atomik)
+  → Seharusnya status berubah ke 'accepted' 
+    saat diterima, tapi tidak terupdate
 
-### 2.1.3 Insert Data Schools
+KERUSAKAN 3: Siswa diterima di lebih dari 1 jalur
+  → Satu siswa muncul di penerimaan_afirmasi 
+    DAN penerimaan_zonasi sekaligus
 
-```sql
--- Schools (50 data)
-INSERT INTO schools (
-    name, kode, npsn, minimum_average, city_id,
-    latitude, longitude,
-    pagu_afirmasi, pagu_mutasi, pagu_prestasi_undangan,
-    pagu_zonasi, pagu_prestasi_tesmandiri, pagu_tidak_naik_kelas,
-    school_code,
-    kebijakan_sisa_pagu_afirmasi, kebijakan_sisa_pagu_mutasi,
-    kebijakan_sisa_pagu_undangan, kebijakan_sisa_pagu_zonasi
-) VALUES
-('SMA Negeri 1 Makassar',     'SMAN1MKS',   '40300001', 75.00, 1,
- -5.1356, 119.4124, 20, 5, 10, 100, 15, 2, 'S001',
- 'Dialihkan ke zonasi','Dialihkan ke zonasi',
- 'Dialihkan ke zonasi','Hangus'),
+KERUSAKAN 4: Penerimaan melebihi pagu sekolah
+  → Jumlah siswa diterima > pagu yang ditetapkan
 
-('SMA Negeri 2 Makassar',     'SMAN2MKS',   '40300002', 74.00, 1,
- -5.1400, 119.4200, 18, 5, 10,  95, 14, 2, 'S002',
- 'Dialihkan ke zonasi','Dialihkan ke zonasi',
- 'Dialihkan ke zonasi','Hangus'),
-
-('SMA Negeri 3 Makassar',     'SMAN3MKS',   '40300003', 73.50, 1,
- -5.1450, 119.4150, 18, 4,  9,  90, 13, 2, 'S003',
- 'Dialihkan ke zonasi','Dialihkan ke prestasi',
- 'Dialihkan ke zonasi','Hangus'),
-
-('SMA Negeri 4 Makassar',     'SMAN4MKS',   '40300004', 73.00, 1,
- -5.1500, 119.4300, 16, 4,  8,  88, 12, 2, 'S004',
- 'Dialihkan ke zonasi','Dialihkan ke zonasi',
- 'Dialihkan ke zonasi','Hangus'),
-
-('SMA Negeri 5 Makassar',     'SMAN5MKS',   '40300005', 72.50, 1,
- -5.1550, 119.4350, 16, 4,  8,  85, 12, 2, 'S005',
- 'Hangus','Dialihkan ke zonasi',
- 'Dialihkan ke zonasi','Hangus'),
-
-('SMA Negeri 6 Makassar',     'SMAN6MKS',   '40300006', 72.00, 1,
- -5.1600, 119.4400, 15, 3,  8,  80, 11, 1, 'S006',
- 'Hangus','Hangus','Dialihkan ke zonasi','Hangus'),
-
-('SMA Negeri 7 Makassar',     'SMAN7MKS',   '40300007', 71.50, 1,
- -5.1650, 119.4450, 15, 3,  7,  78, 11, 1, 'S007',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 8 Makassar',     'SMAN8MKS',   '40300008', 71.00, 1,
- -5.1700, 119.4500, 14, 3,  7,  75, 10, 1, 'S008',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 9 Makassar',     'SMAN9MKS',   '40300009', 70.50, 1,
- -5.1750, 119.4550, 14, 3,  7,  72, 10, 1, 'S009',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 10 Makassar',    'SMAN10MKS',  '40300010', 70.00, 1,
- -5.1800, 119.4600, 13, 3,  6,  70,  9, 1, 'S010',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 11 Makassar',    'SMAN11MKS',  '40300011', 71.00, 1,
- -5.1850, 119.4650, 13, 3,  6,  70,  9, 1, 'S011',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 12 Makassar',    'SMAN12MKS',  '40300012', 70.50, 1,
- -5.1900, 119.4700, 12, 2,  6,  68,  8, 1, 'S012',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 13 Makassar',    'SMAN13MKS',  '40300013', 70.00, 1,
- -5.1950, 119.4750, 12, 2,  5,  65,  8, 1, 'S013',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 14 Makassar',    'SMAN14MKS',  '40300014', 69.50, 1,
- -5.2000, 119.4800, 11, 2,  5,  63,  7, 1, 'S014',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 15 Makassar',    'SMAN15MKS',  '40300015', 69.00, 1,
- -5.2050, 119.4850, 11, 2,  5,  60,  7, 1, 'S015',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Gowa',         'SMAN1GWA',   '40300016', 70.00, 2,
- -5.2000, 119.4700, 13, 3,  6,  68,  9, 1, 'S016',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 2 Gowa',         'SMAN2GWA',   '40300017', 69.50, 2,
- -5.2100, 119.4750, 12, 2,  6,  65,  8, 1, 'S017',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 3 Gowa',         'SMAN3GWA',   '40300018', 69.00, 2,
- -5.2200, 119.4800, 12, 2,  5,  63,  8, 1, 'S018',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Maros',        'SMAN1MRS',   '40300019', 68.50, 3,
- -5.0100, 119.5700, 12, 2,  5,  60,  8, 1, 'S019',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 2 Maros',        'SMAN2MRS',   '40300020', 68.00, 3,
- -5.0200, 119.5800, 11, 2,  5,  58,  7, 1, 'S020',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Pangkep',      'SMAN1PKP',   '40300021', 67.50, 4,
- -4.8700, 119.5300, 11, 2,  5,  55,  7, 1, 'S021',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Bone',         'SMAN1BNE',   '40300022', 67.00, 5,
- -4.5400, 120.3700, 10, 2,  4,  52,  6, 1, 'S022',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 2 Bone',         'SMAN2BNE',   '40300023', 66.50, 5,
- -4.5500, 120.3800, 10, 2,  4,  50,  6, 1, 'S023',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Palopo',       'SMAN1PLP',   '40300024', 66.00, 6,
- -2.9900, 120.1900, 10, 2,  4,  48,  6, 1, 'S024',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 2 Palopo',       'SMAN2PLP',   '40300025', 65.50, 6,
- -3.0000, 120.2000, 10, 2,  4,  46,  5, 1, 'S025',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Pare-Pare',    'SMAN1PRP',   '40300026', 65.00, 7,
- -4.0100, 119.6300, 10, 2,  4,  44,  5, 1, 'S026',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 2 Pare-Pare',    'SMAN2PRP',   '40300027', 64.50, 7,
- -4.0200, 119.6400,  9, 2,  3,  42,  5, 1, 'S027',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Sinjai',       'SMAN1SNJ',   '40300028', 64.00, 8,
- -5.1200, 120.2400,  9, 2,  3,  40,  5, 1, 'S028',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Bulukumba',    'SMAN1BLK',   '40300029', 63.50, 9,
- -5.5500, 120.1900,  9, 1,  3,  38,  4, 1, 'S029',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Bantaeng',     'SMAN1BTN',   '40300030', 63.00, 10,
- -5.5100, 119.9600,  8, 1,  3,  36,  4, 1, 'S030',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Jeneponto',    'SMAN1JNP',   '40300031', 62.50, 11,
- -5.6800, 119.7500,  8, 1,  3,  34,  4, 1, 'S031',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Takalar',      'SMAN1TKL',   '40300032', 62.00, 12,
- -5.4200, 119.4400,  8, 1,  2,  32,  4, 1, 'S032',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Selayar',      'SMAN1SLY',   '40300033', 61.50, 13,
- -6.1200, 120.4500,  7, 1,  2,  30,  3, 0, 'S033',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Barru',        'SMAN1BRU',   '40300034', 61.00, 14,
- -4.4100, 119.6200,  7, 1,  2,  28,  3, 0, 'S034',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Pinrang',      'SMAN1PNR',   '40300035', 60.50, 15,
- -3.7800, 119.6400,  7, 1,  2,  26,  3, 0, 'S035',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Enrekang',     'SMAN1ENR',   '40300036', 60.00, 16,
- -3.5700, 119.7800,  6, 1,  2,  24,  3, 0, 'S036',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Sidrap',       'SMAN1SDP',   '40300037', 60.00, 17,
- -3.9800, 119.8600,  6, 1,  2,  22,  2, 0, 'S037',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Wajo',         'SMAN1WJO',   '40300038', 59.50, 18,
- -4.1100, 120.0300,  6, 1,  2,  20,  2, 0, 'S038',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Soppeng',      'SMAN1SPG',   '40300039', 59.00, 19,
- -4.3400, 119.8800,  6, 1,  2,  20,  2, 0, 'S039',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Luwu',         'SMAN1LWU',   '40300040', 58.50, 20,
- -3.5900, 120.4000,  5, 1,  1,  18,  2, 0, 'S040',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Luwu Utara',   'SMAN1LWUU',  '40300041', 58.00, 21,
- -2.5700, 120.4900,  5, 1,  1,  16,  2, 0, 'S041',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Luwu Timur',   'SMAN1LWUT',  '40300042', 57.50, 22,
- -2.5200, 121.2100,  5, 1,  1,  14,  2, 0, 'S042',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Tana Toraja',  'SMAN1TTJ',   '40300043', 57.00, 23,
- -3.0500, 119.8600,  5, 1,  1,  12,  1, 0, 'S043',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 2 Tana Toraja',  'SMAN2TTJ',   '40300044', 56.50, 23,
- -3.0600, 119.8700,  4, 1,  1,  10,  1, 0, 'S044',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 1 Torut',        'SMAN1TRU',   '40300045', 56.00, 24,
- -2.9600, 120.1200,  4, 1,  1,  10,  1, 0, 'S045',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 16 Makassar',    'SMAN16MKS',  '40300046', 68.50, 1,
- -5.2100, 119.4900, 10, 2,  5,  58,  6, 1, 'S046',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 17 Makassar',    'SMAN17MKS',  '40300047', 68.00, 1,
- -5.2150, 119.4950, 10, 2,  4,  55,  6, 1, 'S047',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 18 Makassar',    'SMAN18MKS',  '40300048', 67.50, 1,
- -5.2200, 119.5000, 10, 2,  4,  52,  6, 1, 'S048',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 19 Makassar',    'SMAN19MKS',  '40300049', 67.00, 1,
- -5.2250, 119.5050,  9, 2,  4,  50,  5, 1, 'S049',
- 'Hangus','Hangus','Hangus','Hangus'),
-
-('SMA Negeri 20 Makassar',    'SMAN20MKS',  '40300050', 66.50, 1,
- -5.2300, 119.5100,  9, 2,  4,  48,  5, 1, 'S050',
- 'Hangus','Hangus','Hangus','Hangus');
-```
-
-### 2.1.4 Insert Data School Users
-
-```sql
--- School Users (50 data)
-INSERT INTO school_users (office_user_username, school_npsn) VALUES
-('citra.dewi',    '40300001'),
-('dewi.rahayu',   '40300001'),
-('eko.prasetyo',  '40300002'),
-('gunawan.wib',   '40300002'),
-('fatimah.zahra', '40300003'),
-('joko.susilo',   '40300003'),
-('hesti.kurnia',  '40300004'),
-('lukman.hakim',  '40300004'),
-('irwan.hidayat', '40300005'),
-('qodir.mahm',    '40300005'),
-('kartini.lest',  '40300006'),
-('vicky.nugra',   '40300006'),
-('mira.sari',     '40300007'),
-('yoga.purnam',   '40300007'),
-('nurul.fadil',   '40300008'),
-('dian.pertiw',   '40300008'),
-('putri.hand',    '40300009'),
-('galuh.kusum',   '40300009'),
-('rizky.aditya',  '40300010'),
-('lia.agustin',   '40300010'),
-('siti.aminah',   '40300011'),
-('qurrata.ain',   '40300011'),
-('ulfah.ramad',   '40300012'),
-('vindra.adi',    '40300012'),
-('wahyu.hiday',   '40300013'),
-('widya.astu',    '40300013'),
-('xena.prati',    '40300014'),
-('yusuf.mans',    '40300014'),
-('zulkifli.ah',   '40300015'),
-('arini.soeka',   '40300015'),
-('candra.wulan',  '40300016'),
-('edo.firman',    '40300017'),
-('fitri.andri',   '40300018'),
-('hendra.wija',   '40300019'),
-('ika.rosdian',   '40300020'),
-('khairul.an',    '40300021'),
-('mirza.fauz',    '40300022'),
-('nadia.perma',   '40300023'),
-('prima.yuda',    '40300024'),
-('rafi.maulan',   '40300025'),
-('salsabila.n',   '40300026'),
-('taufik.isma',   '40300027'),
-('ummu.kalsum',   '40300028'),
-('bagas.pradi',   '40300029'),
-('oscar.darma',   '40300030'),
-('jamal.udin',    '40300031'),
-('teguh.sant',    '40300032'),
-('oki.setiawan',  '40300033'),
-('fitri.andri',   '40300034'),
-('hendra.wija',   '40300035');
-```
-
-### 2.1.5 Insert Data Junior Schools
-
-```sql
--- Junior Schools (50 data)
-INSERT INTO junior_schools (npsn, name) VALUES
-('20300001', 'SMP Negeri 1 Makassar'),
-('20300002', 'SMP Negeri 2 Makassar'),
-('20300003', 'SMP Negeri 3 Makassar'),
-('20300004', 'SMP Negeri 4 Makassar'),
-('20300005', 'SMP Negeri 5 Makassar'),
-('20300006', 'SMP Negeri 6 Makassar'),
-('20300007', 'SMP Negeri 7 Makassar'),
-('20300008', 'SMP Negeri 8 Makassar'),
-('20300009', 'SMP Negeri 9 Makassar'),
-('20300010', 'SMP Negeri 10 Makassar'),
-('20300011', 'SMP Negeri 11 Makassar'),
-('20300012', 'SMP Negeri 12 Makassar'),
-('20300013', 'SMP Negeri 13 Makassar'),
-('20300014', 'SMP Negeri 14 Makassar'),
-('20300015', 'SMP Negeri 15 Makassar'),
-('20300016', 'SMP Negeri 1 Gowa'),
-('20300017', 'SMP Negeri 2 Gowa'),
-('20300018', 'SMP Negeri 3 Gowa'),
-('20300019', 'SMP Negeri 1 Maros'),
-('20300020', 'SMP Negeri 2 Maros'),
-('20300021', 'SMP Negeri 1 Pangkep'),
-('20300022', 'SMP Negeri 1 Bone'),
-('20300023', 'SMP Negeri 2 Bone'),
-('20300024', 'SMP Negeri 1 Palopo'),
-('20300025', 'SMP Negeri 2 Palopo'),
-('20300026', 'SMP Negeri 1 Pare-Pare'),
-('20300027', 'SMP Negeri 2 Pare-Pare'),
-('20300028', 'SMP Negeri 1 Sinjai'),
-('20300029', 'SMP Negeri 1 Bulukumba'),
-('20300030', 'SMP Negeri 1 Bantaeng'),
-('20300031', 'SMP Negeri 1 Jeneponto'),
-('20300032', 'SMP Negeri 1 Takalar'),
-('20300033', 'SMP Negeri 1 Selayar'),
-('20300034', 'SMP Negeri 1 Barru'),
-('20300035', 'SMP Negeri 1 Pinrang'),
-('20300036', 'SMP Negeri 1 Enrekang'),
-('20300037', 'SMP Negeri 1 Sidrap'),
-('20300038', 'SMP Negeri 1 Wajo'),
-('20300039', 'SMP Negeri 1 Soppeng'),
-('20300040', 'SMP Negeri 1 Luwu'),
-('20300041', 'SMP Negeri 1 Luwu Utara'),
-('20300042', 'SMP Negeri 1 Luwu Timur'),
-('20300043', 'SMP Negeri 1 Tana Toraja'),
-('20300044', 'SMP Negeri 2 Tana Toraja'),
-('20300045', 'SMP Negeri 1 Torut'),
-('20300046', 'SMP Negeri 16 Makassar'),
-('20300047', 'SMP Negeri 17 Makassar'),
-('20300048', 'SMP Negeri 18 Makassar'),
-('20300049', 'SMP Negeri 19 Makassar'),
-('20300050', 'SMP Negeri 20 Makassar');
-```
-
-### 2.1.6 Insert Data Users
-
-```sql
--- Users / Calon Peserta Didik (50 data)
-INSERT INTO users (
-    npsn, nisn, birth_date, name, gender,
-    address, phone, school_name, cluster,
-    school_destination_id,
-    latitude, longitude,
-    registration_1_type, jalur_prestasi
-) VALUES
-('20300001','3001234501','2008-01-10','Andi Baso Amir',        'L','Jl. Veteran No.1',        '081234560001','SMP Negeri 1 Makassar', 'A', 1, -5.1360,119.4130,'zonasi',   NULL),
-('20300002','3001234502','2008-02-14','Nurul Aini Safitri',    'P','Jl. Hertasning No.12',     '081234560002','SMP Negeri 2 Makassar', 'A', 1, -5.1380,119.4140,'afirmasi', 'Seni Tari'),
-('20300003','3001234503','2008-03-20','Rizal Pratama',         'L','Jl. Perintis No.5',        '081234560003','SMP Negeri 3 Makassar', 'B', 2, -5.1400,119.4200,'prestasi', 'OSN Matematika'),
-('20300004','3001234504','2008-04-05','Siti Hajar Abubakar',   'P','Jl. Panakkukang No.7',     '081234560004','SMP Negeri 4 Makassar', 'B', 2, -5.1420,119.4210,'mutasi',   NULL),
-('20300005','3001234505','2008-05-12','Muhammad Fauzan',       'L','Jl. Rappocini No.3',       '081234560005','SMP Negeri 5 Makassar', 'A', 3, -5.1440,119.4150,'zonasi',   NULL),
-('20300006','3001234506','2008-06-18','Dewi Kartika Sari',     'P','Jl. Urip Sumoharjo No.22', '081234560006','SMP Negeri 6 Makassar', 'A', 3, -5.1460,119.4160,'afirmasi', 'Musik'),
-('20300007','3001234507','2008-07-22','Ahmad Rifai Hasan',     'L','Jl. Pettarani No.10',      '081234560007','SMP Negeri 7 Makassar', 'B', 4, -5.1480,119.4300,'prestasi', 'O2SN Badminton'),
-('20300008','3001234508','2008-08-30','Rahma Yunita Putri',    'P','Jl. AP Pettarani No.8',    '081234560008','SMP Negeri 8 Makassar', 'B', 4, -5.1500,119.4310,'zonasi',   NULL),
-('20300009','3001234509','2008-09-15','Bagas Setiawan',        'L','Jl. Alauddin No.15',       '081234560009','SMP Negeri 9 Makassar', 'C', 5, -5.1520,119.4350,'afirmasi', NULL),
-('20300010','3001234510','2008-10-01','Isna Fadilah Nur',      'P','Jl. Tamalate No.6',        '081234560010','SMP Negeri 10 Makassar','C', 5, -5.1540,119.4360,'zonasi',   NULL),
-('20300011','3001234511','2008-11-07','Muh. Takdir Syah',      'L','Jl. Makassar No.9',        '081234560011','SMP Negeri 11 Makassar','A', 6, -5.1560,119.4400,'mutasi',   NULL),
-('20300012','3001234512','2008-12-13','Aisyah Putri Zahra',    'P','Jl. Syekh Yusuf No.4',     '081234560012','SMP Negeri 12 Makassar','A', 6, -5.1580,119.4410,'zonasi',   NULL),
-('20300013','3001234513','2008-01-19','Fajri Akbar Malik',     'L','Jl. Hasanuddin No.11',     '081234560013','SMP Negeri 13 Makassar','B', 7, -5.1600,119.4450,'afirmasi', 'Seni Lukis'),
-('20300014','3001234514','2008-02-25','Ummu Habeebah',         'P','Jl. DI Panjaitan No.3',    '081234560014','SMP Negeri 14 Makassar','B', 7, -5.1620,119.4460,'zonasi',   NULL),
-('20300015','3001234515','2008-03-03','Ruslan Efendi',         'L','Jl. Sam Ratulangi No.7',   '081234560015','SMP Negeri 15 Makassar','C', 8, -5.1640,119.4500,'prestasi', 'O2SN Sepak Bola'),
-('20300016','3001234516','2008-04-09','Mariana Dewi Sari',     'P','Jl. Bontolangkasa No.2',   '081234560016','SMP Negeri 1 Gowa',    'C', 8, -5.1660,119.4510,'zonasi',   NULL),
-('20300017','3001234517','2008-05-15','Sudirman Putra',        'L','Jl. Tupai No.5',            '081234560017','SMP Negeri 2 Gowa',    'A', 9, -5.1680,119.4550,'afirmasi', NULL),
-('20300018','3001234518','2008-06-21','Hartini Sari Dewi',     'P','Jl. Landak No.8',           '081234560018','SMP Negeri 3 Gowa',    'A', 9, -5.1700,119.4560,'mutasi',   NULL),
-('20300019','3001234519','2008-07-27','Akbar Ramadhan',        'L','Jl. Beruang No.1',          '081234560019','SMP Negeri 1 Maros',   'B',10, -5.1720,119.4600,'zonasi',   NULL),
-('20300020','3001234520','2008-08-02','Fitriani Amaliah',      'P','Jl. Merak No.4',            '081234560020','SMP Negeri 2 Maros',   'B',10, -5.1740,119.4610,'afirmasi', 'O2SN Renang'),
-('20300021','3001234521','2008-09-08','Ilham Wahyudi',         'L','Jl. Rajawali No.6',         '081234560021','SMP Negeri 1 Pangkep', 'C',11, -5.1760,119.4650,'zonasi',   NULL),
-('20300022','3001234522','2008-10-14','Nur Azizah Saleh',      'P','Jl. Camar No.9',            '081234560022','SMP Negeri 1 Bone',    'C',11, -5.1780,119.4660,'prestasi', 'O2SN Tenis'),
-('20300023','3001234523','2008-11-20','Wahyu Kurnia',          'L','Jl. Nuri No.3',             '081234560023','SMP Negeri 2 Bone',    'A',12, -5.1800,119.4700,'afirmasi', NULL),
-('20300024','3001234524','2008-12-26','Nurhayati Bahar',       'P','Jl. Cenderawasih No.7',     '081234560024','SMP Negeri 1 Palopo',  'A',12, -5.1820,119.4710,'zonasi',   NULL),
-('20300025','3001234525','2008-01-31','Arfan Maulana',         'L','Jl. Kenari No.11',          '081234560025','SMP Negeri 2 Palopo',  'B',13, -5.1840,119.4750,'mutasi',   NULL),
-('20300026','3001234526','2008-02-06','Rahmania Putri',        'P','Jl. Belibis No.5',          '081234560026','SMP Negeri 1 Pare-Pare','B',13,-5.1860,119.4760,'zonasi',   NULL),
-('20300027','3001234527','2008-03-12','Mukhtar Aziz',          'L','Jl. Bangau No.2',           '081234560027','SMP Negeri 2 Pare-Pare','C',14,-5.0100,119.5710,'afirmasi', NULL),
-('20300028','3001234528','2008-04-18','Reski Amalia',          'P','Jl. Pelikan No.8',          '081234560028','SMP Negeri 1 Sinjai',  'C',14, -5.0120,119.5720,'zonasi',   NULL),
-('20300029','3001234529','2008-05-24','Faisal Hasan',          'L','Jl. Garuda No.3',           '081234560029','SMP Negeri 1 Bulukumba','A',15,-5.0140,119.5800,'prestasi', 'Silat'),
-('20300030','3001234530','2008-06-30','Hasriani Putri',        'P','Jl. Elang No.6',            '081234560030','SMP Negeri 1 Bantaeng','A',15, -5.0160,119.5810,'afirmasi', NULL),
-('20300031','3001234531','2008-07-06','Andi Fauzi Akbar',      'L','Jl. Flamingo No.9',         '081234560031','SMP Negeri 1 Jeneponto','B',16,-4.8710,119.5310,'zonasi',   NULL),
-('20300032','3001234532','2008-08-12','Mutmainnah Saleh',      'P','Jl. Angsa No.4',            '081234560032','SMP Negeri 1 Takalar', 'B',16, -4.8720,119.5320,'mutasi',   NULL),
-('20300033','3001234533','2008-09-18','Syahrul Gunawan',       'L','Jl. Merpati No.7',          '081234560033','SMP Negeri 1 Selayar', 'C',17, -4.5410,120.3710,'afirmasi', NULL),
-('20300034','3001234534','2008-10-24','Fitriyani Asri',        'P','Jl. Tekukur No.1',          '081234560034','SMP Negeri 1 Barru',   'C',17, -4.5420,120.3720,'zonasi',   NULL),
-('20300035','3001234535','2008-11-29','Heriansyah Putra',      'L','Jl. Kutilang No.5',         '081234560035','SMP Negeri 1 Pinrang', 'A',18, -2.9910,120.1910,'zonasi',   NULL),
-('20300036','3001234536','2008-12-05','Nur Indah Sari',        'P','Jl. Punai No.8',            '081234560036','SMP Negeri 1 Enrekang','A',18, -3.0010,120.2010,'afirmasi', NULL),
-('20300037','3001234537','2009-01-11','Muh. Ilham Pratama',    'L','Jl. Dara No.2',             '081234560037','SMP Negeri 1 Sidrap',  'B',19, -3.0020,120.2020,'zonasi',   NULL),
-('20300038','3001234538','2009-02-17','Srikandi Ayu Lestari',  'P','Jl. Puyuh No.6',            '081234560038','SMP Negeri 1 Wajo',    'B',19, -3.0030,120.2030,'prestasi', 'O2SN Voli'),
-('20300039','3001234539','2009-03-23','Alamsyah Putra',        'L','Jl. Pipit No.9',            '081234560039','SMP Negeri 1 Soppeng', 'C',20, -4.0110,119.6310,'mutasi',   NULL),
-('20300040','3001234540','2009-04-29','Hasdiana Putri',        'P','Jl. Beo No.3',              '081234560040','SMP Negeri 1 Luwu',    'C',20, -4.0120,119.6320,'zonasi',   NULL),
-('20300041','3001234541','2009-05-05','Junaid Firdaus',        'L','Jl. Kakatua No.7',          '081234560041','SMP Negeri 1 Luwu Utara','A',21,-4.0130,119.6330,'afirmasi', NULL),
-('20300042','3001234542','2009-06-11','Nurafni Saleh',         'P','Jl. Gelatik No.4',          '081234560042','SMP Negeri 1 Luwu Timur','A',21,-4.0140,119.6340,'zonasi',  NULL),
-('20300043','3001234543','2009-07-17','Andika Pratama',        'L','Jl. Jalak No.8',            '081234560043','SMP Negeri 1 Tana Toraja','B',22,-4.0210,119.6410,'prestasi','O2SN Basket'),
-('20300044','3001234544','2009-08-23','Rahmawati Umar',        'P','Jl. Jalak Bali No.2',       '081234560044','SMP Negeri 2 Tana Toraja','B',22,-4.0220,119.6420,'afirmasi',NULL),
-('20300045','3001234545','2009-09-28','Akmal Yusuf',           'L','Jl. Cendrawasih No.5',      '081234560045','SMP Negeri 1 Torut',   'C',23, -5.1200,120.2410,'zonasi',   NULL),
-('20300046','3001234546','2009-10-04','Nurul Hikmah',          'P','Jl. Paradise No.9',         '081234560046','SMP Negeri 16 Makassar','C',23,-5.1210,120.2420,'mutasi',   NULL),
-('20300047','3001234547','2009-11-10','Khaerul Amin',          'L','Jl. Magnolia No.3',         '081234560047','SMP Negeri 17 Makassar','A',24,-5.5510,120.1910,'afirmasi', NULL),
-('20300048','3001234548','2009-12-16','Sulfiani Rahman',       'P','Jl. Dahlia No.6',           '081234560048','SMP Negeri 18 Makassar','A',24,-5.5520,120.1920,'zonasi',   NULL),
-('20300049','3001234549','2008-01-22','Muh. Fatwa Ilham',      'L','Jl. Anggrek No.1',          '081234560049','SMP Negeri 19 Makassar','B',25,-5.5110,119.9610,'zonasi',   NULL),
-('20300050','3001234550','2008-02-28','Nurhajrawati Basri',    'P','Jl. Melati No.4',           '081234560050','SMP Negeri 20 Makassar','B',25,-5.5120,119.9620,'afirmasi', NULL);
+KERUSAKAN 5: Verifikasi rejected tapi ada penerimaan
+  → Seharusnya yang rejected tidak boleh ada 
+    di tabel penerimaan
 ```
 
 ---
 
-## 2.2 Data Dummy - Kelompok B (Registrasi)
-
-### 2.2.1 Insert Registrations Afirmasi
+## STEP 1: Reset dan Insert Data Bersih Terlebih Dahulu
 
 ```sql
 -- ============================================================
--- KELOMPOK B: REGISTRASI
+-- TRUNCATE semua tabel (urutan: anak dulu, lalu induk)
 -- ============================================================
+TRUNCATE TABLE 
+    audit_log_ppdb,
+    penerimaan_zonasi,
+    penerimaan_prestasi_mandiri,
+    penerimaan_mutasi,
+    penerimaan_afirmasi,
+    verification_zonasi,
+    verification_prestasi_mandiri,
+    verification_mutasi,
+    verification_afirmasi,
+    registrations_zonasi,
+    registrations_prestasi_mandiri,
+    registrations_mutasi,
+    registrations_afirmasi,
+    school_users,
+    users,
+    junior_schools,
+    office_users,
+    schools,
+    roles
+RESTART IDENTITY CASCADE;
+```
 
--- Registrations Afirmasi (50 data)
+---
+
+## STEP 2: Insert Tabel Master (Bersih)
+
+```sql
+-- ============================================================
+-- ROLES (60 data)
+-- ============================================================
+INSERT INTO roles (name) VALUES
+('Super Admin'),
+('Admin Dinas'),
+('Admin Provinsi'),
+('Operator Dinas'),
+('Operator Sekolah'),
+('Kepala Sekolah'),
+('Wakil Kepala Sekolah'),
+('Verifikator Afirmasi'),
+('Verifikator Mutasi'),
+('Verifikator Zonasi'),
+('Verifikator Prestasi'),
+('Panitia PPDB Provinsi'),
+('Panitia PPDB Kota'),
+('Koordinator Wilayah'),
+('Supervisor PPDB'),
+('Pengawas Eksternal'),
+('Auditor Internal'),
+('Auditor Eksternal'),
+('Petugas Helpdesk'),
+('Petugas Data'),
+('Petugas Zonasi'),
+('Petugas Afirmasi'),
+('Petugas Mutasi'),
+('Petugas Prestasi'),
+('Petugas Daftar Ulang'),
+('Petugas Pengumuman'),
+('Admin Wilayah Utara'),
+('Admin Wilayah Selatan'),
+('Admin Wilayah Timur'),
+('Admin Wilayah Barat'),
+('Operator Cadangan 1'),
+('Operator Cadangan 2'),
+('Operator Cadangan 3'),
+('Tim Seleksi Akademik'),
+('Tim Seleksi Non-Akademik'),
+('Tim Validasi Dokumen'),
+('Tim Teknis Sistem'),
+('Tim Keamanan Data'),
+('Pengelola Akun Siswa'),
+('Pengelola Kuota Sekolah'),
+('Pengelola Jadwal PPDB'),
+('Pengelola Dokumen'),
+('Pengelola Hasil Seleksi'),
+('Reviewer Berkas'),
+('Approver Berkas'),
+('Monitoring Real-time'),
+('Evaluator Program'),
+('Administrator Sistem'),
+('Operator PPDB Harian'),
+('Panitia Zonasi Khusus'),
+('Panitia Afirmasi Khusus'),
+('Panitia Mutasi Khusus'),
+('Panitia Prestasi Khusus'),
+('Staf Dinas Pendidikan'),
+('Staf Tata Usaha'),
+('Koordinator Sekolah'),
+('Tim Verifikasi Lapangan'),
+('Petugas Arsip'),
+('Petugas IT Support'),
+('Viewer Only');
+
+-- ============================================================
+-- OFFICE_USERS (60 data)
+-- ============================================================
+INSERT INTO office_users (name, username, password, role_id) VALUES
+('Ahmad Fauzan',         'operator001', 'hashed_pass_001', 1),
+('Siti Nur Aisyah',      'operator002', 'hashed_pass_002', 2),
+('Budi Santoso',         'operator003', 'hashed_pass_003', 3),
+('Dewi Lestari',         'operator004', 'hashed_pass_004', 4),
+('Rizky Maulana',        'operator005', 'hashed_pass_005', 5),
+('Nadia Putri',          'operator006', 'hashed_pass_006', 6),
+('Muhammad Arif',        'operator007', 'hashed_pass_007', 7),
+('Anisa Rahma',          'operator008', 'hashed_pass_008', 8),
+('Fajar Pratama',        'operator009', 'hashed_pass_009', 9),
+('Indah Permatasari',    'operator010', 'hashed_pass_010', 10),
+('Dimas Saputra',        'operator011', 'hashed_pass_011', 11),
+('Aulia Maharani',       'operator012', 'hashed_pass_012', 12),
+('Rafi Alfarizi',        'operator013', 'hashed_pass_013', 13),
+('Nabila Zahra',         'operator014', 'hashed_pass_014', 14),
+('Agus Setiawan',        'operator015', 'hashed_pass_015', 15),
+('Fitri Handayani',      'operator016', 'hashed_pass_016', 16),
+('Hendra Wijaya',        'operator017', 'hashed_pass_017', 17),
+('Laila Safitri',        'operator018', 'hashed_pass_018', 18),
+('Yusuf Ramadhan',       'operator019', 'hashed_pass_019', 19),
+('Citra Amelia',         'operator020', 'hashed_pass_020', 20),
+('Andi Kurniawan',       'operator021', 'hashed_pass_021', 21),
+('Maya Salsabila',       'operator022', 'hashed_pass_022', 22),
+('Farhan Akbar',         'operator023', 'hashed_pass_023', 23),
+('Putri Anggraini',      'operator024', 'hashed_pass_024', 24),
+('Reza Febriansyah',     'operator025', 'hashed_pass_025', 25),
+('Salsa Nurhaliza',      'operator026', 'hashed_pass_026', 26),
+('Bagas Aditya',         'operator027', 'hashed_pass_027', 27),
+('Tiara Kusuma',         'operator028', 'hashed_pass_028', 28),
+('Ilham Nugraha',        'operator029', 'hashed_pass_029', 29),
+('Vina Oktaviani',       'operator030', 'hashed_pass_030', 30),
+('Rangga Prakoso',       'operator031', 'hashed_pass_031', 31),
+('Niken Ayu',            'operator032', 'hashed_pass_032', 32),
+('Bayu Prasetyo',        'operator033', 'hashed_pass_033', 33),
+('Mila Kartika',         'operator034', 'hashed_pass_034', 34),
+('Gilang Ramadhan',      'operator035', 'hashed_pass_035', 35),
+('Dinda Febrianti',      'operator036', 'hashed_pass_036', 36),
+('Arman Hakim',          'operator037', 'hashed_pass_037', 37),
+('Rara Maharani',        'operator038', 'hashed_pass_038', 38),
+('Taufik Hidayat',       'operator039', 'hashed_pass_039', 39),
+('Nuraeni Lestari',      'operator040', 'hashed_pass_040', 40),
+('Reno Saputra',         'operator041', 'hashed_pass_041', 41),
+('Ayu Wulandari',        'operator042', 'hashed_pass_042', 42),
+('Hafiz Firdaus',        'operator043', 'hashed_pass_043', 43),
+('Sekar Kinanti',        'operator044', 'hashed_pass_044', 44),
+('Yoga Pratama',         'operator045', 'hashed_pass_045', 45),
+('Melati Anggraeni',     'operator046', 'hashed_pass_046', 46),
+('Irvan Maulana',        'operator047', 'hashed_pass_047', 47),
+('Nisa Khairunnisa',     'operator048', 'hashed_pass_048', 48),
+('Doni Firmansyah',      'operator049', 'hashed_pass_049', 49),
+('Elsa Damayanti',       'operator050', 'hashed_pass_050', 50),
+('Farel Prayoga',        'operator051', 'hashed_pass_051', 51),
+('Ghea Indrawati',       'operator052', 'hashed_pass_052', 52),
+('Haris Budiman',        'operator053', 'hashed_pass_053', 53),
+('Ika Rahmawati',        'operator054', 'hashed_pass_054', 54),
+('Jaka Tarub',           'operator055', 'hashed_pass_055', 55),
+('Kiki Amalia',          'operator056', 'hashed_pass_056', 56),
+('Luki Prasetyo',        'operator057', 'hashed_pass_057', 57),
+('Mira Susanti',         'operator058', 'hashed_pass_058', 58),
+('Nando Kusuma',         'operator059', 'hashed_pass_059', 59),
+('Okta Sari',            'operator060', 'hashed_pass_060', 60);
+
+-- ============================================================
+-- SCHOOLS (60 data)
+-- pagu sengaja dibuat KECIL agar mudah melebihi batas
+-- ============================================================
+INSERT INTO schools (
+    name, kode, npsn, minimum_average, city_id,
+    latitude, longitude,
+    pagu_afirmasi, pagu_mutasi,
+    pagu_prestasi_undangan, pagu_zonasi,
+    pagu_prestasi_tesmandiri, pagu_tidak_naik_kelas,
+    school_code
+) VALUES
+-- Sekolah 1-20: Makassar (pagu kecil = mudah overflow)
+('SMA Negeri 1 Makassar',  'SCH001','40310001',82.00,7371,-5.1420,119.4321, 3, 2, 2, 5, 2, 0,'SULSEL001'),
+('SMA Negeri 2 Makassar',  'SCH002','40310002',80.00,7371,-5.1440,119.4341, 3, 2, 2, 5, 2, 0,'SULSEL002'),
+('SMA Negeri 3 Makassar',  'SCH003','40310003',78.00,7371,-5.1460,119.4361, 3, 2, 2, 5, 2, 0,'SULSEL003'),
+('SMA Negeri 4 Makassar',  'SCH004','40310004',79.00,7371,-5.1480,119.4381, 3, 2, 2, 5, 2, 0,'SULSEL004'),
+('SMA Negeri 5 Makassar',  'SCH005','40310005',77.00,7371,-5.1500,119.4401, 3, 2, 2, 5, 2, 0,'SULSEL005'),
+('SMA Negeri 6 Makassar',  'SCH006','40310006',76.00,7371,-5.1520,119.4421, 3, 2, 2, 5, 2, 0,'SULSEL006'),
+('SMA Negeri 7 Makassar',  'SCH007','40310007',75.00,7371,-5.1540,119.4441, 3, 2, 2, 5, 2, 0,'SULSEL007'),
+('SMA Negeri 8 Makassar',  'SCH008','40310008',74.00,7371,-5.1560,119.4461, 3, 2, 2, 5, 2, 0,'SULSEL008'),
+('SMA Negeri 9 Makassar',  'SCH009','40310009',73.00,7371,-5.1580,119.4481, 3, 2, 2, 5, 2, 0,'SULSEL009'),
+('SMA Negeri 10 Makassar', 'SCH010','40310010',72.00,7371,-5.1600,119.4501, 3, 2, 2, 5, 2, 0,'SULSEL010'),
+('SMA Negeri 11 Makassar', 'SCH011','40310011',71.00,7371,-5.1620,119.4521, 3, 2, 2, 5, 2, 0,'SULSEL011'),
+('SMA Negeri 12 Makassar', 'SCH012','40310012',70.00,7371,-5.1640,119.4541, 3, 2, 2, 5, 2, 0,'SULSEL012'),
+('SMA Negeri 13 Makassar', 'SCH013','40310013',70.00,7371,-5.1660,119.4561, 3, 2, 2, 5, 2, 0,'SULSEL013'),
+('SMA Negeri 14 Makassar', 'SCH014','40310014',70.00,7371,-5.1680,119.4581, 3, 2, 2, 5, 2, 0,'SULSEL014'),
+('SMA Negeri 15 Makassar', 'SCH015','40310015',70.00,7371,-5.1700,119.4601, 3, 2, 2, 5, 2, 0,'SULSEL015'),
+('SMA Negeri 16 Makassar', 'SCH016','40310016',70.00,7371,-5.1720,119.4621, 3, 2, 2, 5, 2, 0,'SULSEL016'),
+('SMA Negeri 17 Makassar', 'SCH017','40310017',70.00,7371,-5.1740,119.4641, 3, 2, 2, 5, 2, 0,'SULSEL017'),
+('SMA Negeri 18 Makassar', 'SCH018','40310018',70.00,7371,-5.1760,119.4661, 3, 2, 2, 5, 2, 0,'SULSEL018'),
+('SMA Negeri 19 Makassar', 'SCH019','40310019',70.00,7371,-5.1780,119.4681, 3, 2, 2, 5, 2, 0,'SULSEL019'),
+('SMA Negeri 20 Makassar', 'SCH020','40310020',70.00,7371,-5.1800,119.4701, 3, 2, 2, 5, 2, 0,'SULSEL020'),
+-- Sekolah 21-40: SMK Makassar
+('SMK Negeri 1 Makassar',  'SCH021','40310021',70.00,7371,-5.1820,119.4721, 3, 2, 2, 5, 2, 0,'SULSEL021'),
+('SMK Negeri 2 Makassar',  'SCH022','40310022',70.00,7371,-5.1840,119.4741, 3, 2, 2, 5, 2, 0,'SULSEL022'),
+('SMK Negeri 3 Makassar',  'SCH023','40310023',70.00,7371,-5.1860,119.4761, 3, 2, 2, 5, 2, 0,'SULSEL023'),
+('SMK Negeri 4 Makassar',  'SCH024','40310024',70.00,7371,-5.1880,119.4781, 3, 2, 2, 5, 2, 0,'SULSEL024'),
+('SMK Negeri 5 Makassar',  'SCH025','40310025',70.00,7371,-5.1900,119.4801, 3, 2, 2, 5, 2, 0,'SULSEL025'),
+('SMK Negeri 6 Makassar',  'SCH026','40310026',70.00,7371,-5.1920,119.4821, 3, 2, 2, 5, 2, 0,'SULSEL026'),
+('SMK Negeri 7 Makassar',  'SCH027','40310027',70.00,7371,-5.1940,119.4841, 3, 2, 2, 5, 2, 0,'SULSEL027'),
+('SMK Negeri 8 Makassar',  'SCH028','40310028',70.00,7371,-5.1960,119.4861, 3, 2, 2, 5, 2, 0,'SULSEL028'),
+('SMK Negeri 9 Makassar',  'SCH029','40310029',70.00,7371,-5.1980,119.4881, 3, 2, 2, 5, 2, 0,'SULSEL029'),
+('SMK Negeri 10 Makassar', 'SCH030','40310030',70.00,7371,-5.2000,119.4901, 3, 2, 2, 5, 2, 0,'SULSEL030'),
+-- Sekolah 41-60: Daerah lain
+('SMA Negeri 1 Gowa',      'SCH031','40310031',70.00,7301,-5.2020,119.4921, 3, 2, 2, 5, 2, 0,'SULSEL031'),
+('SMA Negeri 2 Gowa',      'SCH032','40310032',70.00,7301,-5.2040,119.4941, 3, 2, 2, 5, 2, 0,'SULSEL032'),
+('SMA Negeri 1 Maros',     'SCH033','40310033',70.00,7302,-5.2060,119.4961, 3, 2, 2, 5, 2, 0,'SULSEL033'),
+('SMA Negeri 2 Maros',     'SCH034','40310034',70.00,7302,-5.2080,119.4981, 3, 2, 2, 5, 2, 0,'SULSEL034'),
+('SMA Negeri 1 Takalar',   'SCH035','40310035',70.00,7303,-5.2100,119.5001, 3, 2, 2, 5, 2, 0,'SULSEL035'),
+('SMA Negeri 2 Takalar',   'SCH036','40310036',70.00,7303,-5.2120,119.5021, 3, 2, 2, 5, 2, 0,'SULSEL036'),
+('SMA Negeri 1 Pangkep',   'SCH037','40310037',70.00,7304,-5.2140,119.5041, 3, 2, 2, 5, 2, 0,'SULSEL037'),
+('SMA Negeri 2 Pangkep',   'SCH038','40310038',70.00,7304,-5.2160,119.5061, 3, 2, 2, 5, 2, 0,'SULSEL038'),
+('SMA Negeri 1 Parepare',  'SCH039','40310039',70.00,7372,-5.2180,119.5081, 3, 2, 2, 5, 2, 0,'SULSEL039'),
+('SMA Negeri 2 Parepare',  'SCH040','40310040',70.00,7372,-5.2200,119.5101, 3, 2, 2, 5, 2, 0,'SULSEL040'),
+('SMA Negeri 1 Bone',      'SCH041','40310041',70.00,7311,-5.2220,119.5121, 3, 2, 2, 5, 2, 0,'SULSEL041'),
+('SMA Negeri 2 Bone',      'SCH042','40310042',70.00,7311,-5.2240,119.5141, 3, 2, 2, 5, 2, 0,'SULSEL042'),
+('SMA Negeri 1 Palopo',    'SCH043','40310043',70.00,7373,-5.2260,119.5161, 3, 2, 2, 5, 2, 0,'SULSEL043'),
+('SMA Negeri 2 Palopo',    'SCH044','40310044',70.00,7373,-5.2280,119.5181, 3, 2, 2, 5, 2, 0,'SULSEL044'),
+('SMA Negeri 1 Bulukumba', 'SCH045','40310045',70.00,7305,-5.2300,119.5201, 3, 2, 2, 5, 2, 0,'SULSEL045'),
+('SMA Negeri 2 Bulukumba', 'SCH046','40310046',70.00,7305,-5.2320,119.5221, 3, 2, 2, 5, 2, 0,'SULSEL046'),
+('SMK Negeri 1 Gowa',      'SCH047','40310047',70.00,7301,-5.2340,119.5241, 3, 2, 2, 5, 2, 0,'SULSEL047'),
+('SMK Negeri 1 Maros',     'SCH048','40310048',70.00,7302,-5.2360,119.5261, 3, 2, 2, 5, 2, 0,'SULSEL048'),
+('SMK Negeri 1 Parepare',  'SCH049','40310049',70.00,7372,-5.2380,119.5281, 3, 2, 2, 5, 2, 0,'SULSEL049'),
+('SMK Negeri 1 Bone',      'SCH050','40310050',70.00,7311,-5.2400,119.5301, 3, 2, 2, 5, 2, 0,'SULSEL050'),
+('SMA Negeri 1 Sinjai',    'SCH051','40310051',70.00,7306,-5.2420,119.5321, 3, 2, 2, 5, 2, 0,'SULSEL051'),
+('SMA Negeri 1 Jeneponto', 'SCH052','40310052',70.00,7307,-5.2440,119.5341, 3, 2, 2, 5, 2, 0,'SULSEL052'),
+('SMA Negeri 1 Bantaeng',  'SCH053','40310053',70.00,7308,-5.2460,119.5361, 3, 2, 2, 5, 2, 0,'SULSEL053'),
+('SMA Negeri 1 Selayar',   'SCH054','40310054',70.00,7309,-5.2480,119.5381, 3, 2, 2, 5, 2, 0,'SULSEL054'),
+('SMA Negeri 1 Wajo',      'SCH055','40310055',70.00,7310,-5.2500,119.5401, 3, 2, 2, 5, 2, 0,'SULSEL055'),
+('SMA Negeri 1 Sidrap',    'SCH056','40310056',70.00,7312,-5.2520,119.5421, 3, 2, 2, 5, 2, 0,'SULSEL056'),
+('SMA Negeri 1 Pinrang',   'SCH057','40310057',70.00,7313,-5.2540,119.5441, 3, 2, 2, 5, 2, 0,'SULSEL057'),
+('SMA Negeri 1 Enrekang',  'SCH058','40310058',70.00,7314,-5.2560,119.5461, 3, 2, 2, 5, 2, 0,'SULSEL058'),
+('SMA Negeri 1 Luwu',      'SCH059','40310059',70.00,7315,-5.2580,119.5481, 3, 2, 2, 5, 2, 0,'SULSEL059'),
+('SMA Negeri 1 Soppeng',   'SCH060','40310060',70.00,7316,-5.2600,119.5501, 3, 2, 2, 5, 2, 0,'SULSEL060');
+
+-- ============================================================
+-- SCHOOL_USERS (60 data)
+-- ============================================================
+INSERT INTO school_users (office_user_username, school_npsn) VALUES
+('operator001','40310001'), ('operator002','40310002'),
+('operator003','40310003'), ('operator004','40310004'),
+('operator005','40310005'), ('operator006','40310006'),
+('operator007','40310007'), ('operator008','40310008'),
+('operator009','40310009'), ('operator010','40310010'),
+('operator011','40310011'), ('operator012','40310012'),
+('operator013','40310013'), ('operator014','40310014'),
+('operator015','40310015'), ('operator016','40310016'),
+('operator017','40310017'), ('operator018','40310018'),
+('operator019','40310019'), ('operator020','40310020'),
+('operator021','40310021'), ('operator022','40310022'),
+('operator023','40310023'), ('operator024','40310024'),
+('operator025','40310025'), ('operator026','40310026'),
+('operator027','40310027'), ('operator028','40310028'),
+('operator029','40310029'), ('operator030','40310030'),
+('operator031','40310031'), ('operator032','40310032'),
+('operator033','40310033'), ('operator034','40310034'),
+('operator035','40310035'), ('operator036','40310036'),
+('operator037','40310037'), ('operator038','40310038'),
+('operator039','40310039'), ('operator040','40310040'),
+('operator041','40310041'), ('operator042','40310042'),
+('operator043','40310043'), ('operator044','40310044'),
+('operator045','40310045'), ('operator046','40310046'),
+('operator047','40310047'), ('operator048','40310048'),
+('operator049','40310049'), ('operator050','40310050'),
+('operator051','40310051'), ('operator052','40310052'),
+('operator053','40310053'), ('operator054','40310054'),
+('operator055','40310055'), ('operator056','40310056'),
+('operator057','40310057'), ('operator058','40310058'),
+('operator059','40310059'), ('operator060','40310060');
+
+-- ============================================================
+-- JUNIOR_SCHOOLS (60 data)
+-- ============================================================
+INSERT INTO junior_schools (npsn, name) VALUES
+('40320001','SMP Negeri 1 Makassar'),
+('40320002','SMP Negeri 2 Makassar'),
+('40320003','SMP Negeri 3 Makassar'),
+('40320004','SMP Negeri 4 Makassar'),
+('40320005','SMP Negeri 5 Makassar'),
+('40320006','SMP Negeri 6 Makassar'),
+('40320007','SMP Negeri 7 Makassar'),
+('40320008','SMP Negeri 8 Makassar'),
+('40320009','SMP Negeri 9 Makassar'),
+('40320010','SMP Negeri 10 Makassar'),
+('40320011','SMP Negeri 11 Makassar'),
+('40320012','SMP Negeri 12 Makassar'),
+('40320013','SMP Negeri 13 Makassar'),
+('40320014','SMP Negeri 14 Makassar'),
+('40320015','SMP Negeri 15 Makassar'),
+('40320016','SMP Negeri 16 Makassar'),
+('40320017','SMP Negeri 17 Makassar'),
+('40320018','SMP Negeri 18 Makassar'),
+('40320019','SMP Negeri 19 Makassar'),
+('40320020','SMP Negeri 20 Makassar'),
+('40320021','SMP Negeri 1 Gowa'),
+('40320022','SMP Negeri 2 Gowa'),
+('40320023','SMP Negeri 3 Gowa'),
+('40320024','SMP Negeri 1 Maros'),
+('40320025','SMP Negeri 2 Maros'),
+('40320026','SMP Negeri 1 Takalar'),
+('40320027','SMP Negeri 2 Takalar'),
+('40320028','SMP Negeri 1 Pangkep'),
+('40320029','SMP Negeri 2 Pangkep'),
+('40320030','SMP Negeri 1 Parepare'),
+('40320031','SMP Negeri 2 Parepare'),
+('40320032','SMP Negeri 1 Bone'),
+('40320033','SMP Negeri 2 Bone'),
+('40320034','SMP Negeri 3 Bone'),
+('40320035','SMP Negeri 1 Palopo'),
+('40320036','SMP Negeri 2 Palopo'),
+('40320037','SMP Negeri 1 Bulukumba'),
+('40320038','SMP Negeri 2 Bulukumba'),
+('40320039','SMP Negeri 1 Sinjai'),
+('40320040','SMP Negeri 1 Jeneponto'),
+('40320041','SMP Negeri 1 Bantaeng'),
+('40320042','SMP Negeri 1 Selayar'),
+('40320043','SMP Negeri 1 Wajo'),
+('40320044','SMP Negeri 1 Sidrap'),
+('40320045','SMP Negeri 1 Pinrang'),
+('40320046','SMP Negeri 1 Enrekang'),
+('40320047','SMP Negeri 1 Luwu'),
+('40320048','SMP Negeri 1 Soppeng'),
+('40320049','SMP Islam Athirah Makassar'),
+('40320050','SMP Unismuh Makassar'),
+('40320051','SMP Frater Makassar'),
+('40320052','SMP Katolik Rajawali Makassar'),
+('40320053','SMP Negeri 1 Barru'),
+('40320054','SMP Negeri 1 Luwu Timur'),
+('40320055','SMP Negeri 1 Luwu Utara'),
+('40320056','SMP Negeri 1 Toraja Utara'),
+('40320057','SMP Negeri 2 Sinjai'),
+('40320058','SMP Negeri 2 Jeneponto'),
+('40320059','SMP Negeri 2 Soppeng'),
+('40320060','SMP Negeri 2 Wajo');
+```
+
+---
+
+## STEP 3: Insert USERS (60 data) — Dengan Kerusakan Terselip
+
+```sql
+-- ============================================================
+-- USERS (60 data)
+-- Kerusakan: registration_*_type dan acceptance_type
+-- diisi tapi _id sengaja DIKOSONGKAN atau SALAH
+-- ============================================================
+INSERT INTO users (
+    npsn, nisn, birth_date, name, gender,
+    address, phone, school_name, cluster,
+    school_destination_id, latitude, longitude,
+    registration_1_type, registration_2_type, registration_3_type,
+    acceptance_type, acceptance_id,
+    jalur_prestasi
+) VALUES
+-- =======================================
+-- User 1-15: NORMAL (tidak ada masalah)
+-- =======================================
+('40320001','3080000001','2008-01-05','Aisyah Putri Rahmadani','P',
+ 'Jl. AP Pettarani No.1, Makassar','081200000001',
+ 'SMP Negeri 1 Makassar','Cluster 1',
+ 1,-5.1410,119.4310,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320002','3080000002','2008-02-10','Muhammad Rizky Pratama','L',
+ 'Jl. Sultan Hasanuddin No.2, Makassar','081200000002',
+ 'SMP Negeri 2 Makassar','Cluster 1',
+ 2,-5.1430,119.4330,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320003','3080000003','2008-03-15','Nabila Zahra Lestari','P',
+ 'Jl. Urip Sumoharjo No.3, Makassar','081200000003',
+ 'SMP Negeri 3 Makassar','Cluster 2',
+ 3,-5.1450,119.4350,'prestasi_mandiri',NULL,NULL,NULL,NULL,'Akademik'),
+
+('40320004','3080000004','2008-04-20','Ahmad Fadhil Ramadhan','L',
+ 'Jl. Penghibur No.4, Makassar','081200000004',
+ 'SMP Negeri 4 Makassar','Cluster 2',
+ 4,-5.1470,119.4370,'mutasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320005','3080000005','2008-05-25','Dewi Anjani Safitri','P',
+ 'Jl. Ratulangi No.5, Makassar','081200000005',
+ 'SMP Negeri 5 Makassar','Cluster 3',
+ 5,-5.1490,119.4390,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320006','3080000006','2008-06-30','Rafi Maulana Hakim','L',
+ 'Jl. Veteran Selatan No.6, Makassar','081200000006',
+ 'SMP Negeri 6 Makassar','Cluster 3',
+ 6,-5.1510,119.4410,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320007','3080000007','2008-07-05','Salsabila Nur Azizah','P',
+ 'Jl. Andi Tonro No.7, Makassar','081200000007',
+ 'SMP Negeri 7 Makassar','Cluster 4',
+ 7,-5.1530,119.4430,'prestasi_mandiri',NULL,NULL,NULL,NULL,'Non-Akademik'),
+
+('40320008','3080000008','2008-08-10','Farhan Aditya Saputra','L',
+ 'Jl. Nusantara No.8, Makassar','081200000008',
+ 'SMP Negeri 8 Makassar','Cluster 4',
+ 8,-5.1550,119.4450,'mutasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320009','3080000009','2008-09-15','Tiara Kusuma Wardani','P',
+ 'Jl. Sungai Saddang No.9, Makassar','081200000009',
+ 'SMP Negeri 9 Makassar','Cluster 5',
+ 9,-5.1570,119.4470,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320010','3080000010','2008-10-20','Ilham Dwi Nugroho','L',
+ 'Jl. Irian No.10, Makassar','081200000010',
+ 'SMP Negeri 10 Makassar','Cluster 5',
+ 10,-5.1590,119.4490,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320011','3080000011','2008-11-25','Maya Fitri Handayani','P',
+ 'Jl. Andi Pangeran No.11, Makassar','081200000011',
+ 'SMP Negeri 11 Makassar','Cluster 1',
+ 11,-5.1610,119.4510,'prestasi_mandiri',NULL,NULL,NULL,NULL,'Akademik'),
+
+('40320012','3080000012','2008-12-30','Bagas Arya Wicaksono','L',
+ 'Jl. Bougenville No.12, Makassar','081200000012',
+ 'SMP Negeri 12 Makassar','Cluster 2',
+ 12,-5.1630,119.4530,'mutasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320013','3080000013','2008-01-14','Citra Ayu Permatasari','P',
+ 'Jl. Cendrawasih No.13, Makassar','081200000013',
+ 'SMP Negeri 13 Makassar','Cluster 2',
+ 13,-5.1650,119.4550,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320014','3080000014','2008-02-18','Yusuf Alfarizi Hidayat','L',
+ 'Jl. Dg. Tata No.14, Makassar','081200000014',
+ 'SMP Negeri 14 Makassar','Cluster 3',
+ 14,-5.1670,119.4570,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320015','3080000015','2008-03-22','Anisa Khairunnisa','P',
+ 'Jl. Haji Bau No.15, Makassar','081200000015',
+ 'SMP Negeri 15 Makassar','Cluster 3',
+ 15,-5.1690,119.4590,'prestasi_mandiri',NULL,NULL,NULL,NULL,'Non-Akademik'),
+
+-- =======================================
+-- User 16-30: KERUSAKAN TIPE 1 & 2
+-- Status registrasi akan di-set 'submitted'
+-- tapi penerimaan akan tetap dibuat (inkonsisten)
+-- =======================================
+('40320016','3080000016','2008-04-26','Dimas Tri Prakoso','L',
+ 'Jl. Kakatua No.16, Makassar','081200000016',
+ 'SMP Negeri 16 Makassar','Cluster 4',
+ 1,-5.1710,119.4610,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320017','3080000017','2008-05-30','Nadia Febrianti','P',
+ 'Jl. Lompobattang No.17, Makassar','081200000017',
+ 'SMP Negeri 17 Makassar','Cluster 4',
+ 2,-5.1730,119.4630,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320018','3080000018','2008-06-04','Hafiz Firdaus Santoso','L',
+ 'Jl. Masjid Raya No.18, Makassar','081200000018',
+ 'SMP Negeri 18 Makassar','Cluster 5',
+ 3,-5.1750,119.4650,'prestasi_mandiri',NULL,NULL,NULL,NULL,'Akademik'),
+
+('40320019','3080000019','2008-07-08','Laila Maharani','P',
+ 'Jl. Nuri No.19, Makassar','081200000019',
+ 'SMP Negeri 19 Makassar','Cluster 5',
+ 4,-5.1770,119.4670,'mutasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320020','3080000020','2008-08-12','Rangga Putra Wijaya','L',
+ 'Jl. Onta No.20, Makassar','081200000020',
+ 'SMP Negeri 20 Makassar','Cluster 1',
+ 5,-5.1790,119.4690,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320021','3080000021','2008-09-16','Aulia Rahmawati','P',
+ 'Jl. Paccerakkang No.21, Makassar','081200000021',
+ 'SMP Negeri 1 Gowa','Cluster 1',
+ 6,-5.1810,119.4710,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320022','3080000022','2008-10-20','Bayu Setiawan','L',
+ 'Jl. Rajawali No.22, Makassar','081200000022',
+ 'SMP Negeri 2 Gowa','Cluster 2',
+ 7,-5.1830,119.4730,'prestasi_mandiri',NULL,NULL,NULL,NULL,'Non-Akademik'),
+
+('40320023','3080000023','2008-11-24','Indah Nuraini','P',
+ 'Jl. Sungai Cerekang No.23, Makassar','081200000023',
+ 'SMP Negeri 3 Gowa','Cluster 2',
+ 8,-5.1850,119.4750,'mutasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320024','3080000024','2008-12-28','Fajar Kurniawan','L',
+ 'Jl. Timor No.24, Makassar','081200000024',
+ 'SMP Negeri 1 Maros','Cluster 3',
+ 9,-5.1870,119.4770,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320025','3080000025','2008-01-01','Putri Amelia Sari','P',
+ 'Jl. Ujung Pandang No.25, Makassar','081200000025',
+ 'SMP Negeri 2 Maros','Cluster 3',
+ 10,-5.1890,119.4790,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320026','3080000026','2008-02-05','Reza Firmansyah','L',
+ 'Jl. Veteran Utara No.26, Makassar','081200000026',
+ 'SMP Negeri 1 Takalar','Cluster 4',
+ 11,-5.1910,119.4810,'prestasi_mandiri',NULL,NULL,NULL,NULL,'Akademik'),
+
+('40320027','3080000027','2008-03-10','Sekar Ayu Kinanti','P',
+ 'Jl. Wahidin No.27, Makassar','081200000027',
+ 'SMP Negeri 2 Takalar','Cluster 4',
+ 12,-5.1930,119.4830,'mutasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320028','3080000028','2008-04-14','Gilang Ramadhan','L',
+ 'Jl. Andi Djemma No.28, Makassar','081200000028',
+ 'SMP Negeri 1 Pangkep','Cluster 5',
+ 13,-5.1950,119.4850,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320029','3080000029','2008-05-18','Mila Kartika Dewi','P',
+ 'Jl. Baji Gau No.29, Makassar','081200000029',
+ 'SMP Negeri 2 Pangkep','Cluster 5',
+ 14,-5.1970,119.4870,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320030','3080000030','2008-06-22','Andi Saputra','L',
+ 'Jl. Cumi-Cumi No.30, Makassar','081200000030',
+ 'SMP Negeri 1 Parepare','Cluster 1',
+ 15,-5.1990,119.4890,'prestasi_mandiri',NULL,NULL,NULL,NULL,'Non-Akademik'),
+
+-- =======================================
+-- User 31-45: KERUSAKAN TIPE 3
+-- Siswa yang akan diterima di LEBIH dari 1 jalur
+-- =======================================
+('40320031','3080000031','2008-07-26','Rara Oktaviani','P',
+ 'Jl. Daeng Tata No.31, Makassar','081200000031',
+ 'SMP Negeri 2 Parepare','Cluster 2',
+ 1,-5.2010,119.4910,'afirmasi','zonasi',NULL,NULL,NULL,NULL),
+
+('40320032','3080000032','2008-08-30','Taufik Maulana','L',
+ 'Jl. Emmy Saelan No.32, Makassar','081200000032',
+ 'SMP Negeri 1 Bone','Cluster 2',
+ 2,-5.2030,119.4930,'afirmasi','mutasi',NULL,NULL,NULL,NULL),
+
+('40320033','3080000033','2008-09-03','Niken Puspitasari','P',
+ 'Jl. Garuda No.33, Makassar','081200000033',
+ 'SMP Negeri 2 Bone','Cluster 3',
+ 3,-5.2050,119.4950,'zonasi','prestasi_mandiri',NULL,NULL,NULL,'Akademik'),
+
+('40320034','3080000034','2008-10-07','Yoga Pratama','L',
+ 'Jl. Hati Murni No.34, Makassar','081200000034',
+ 'SMP Negeri 3 Bone','Cluster 3',
+ 4,-5.2070,119.4970,'mutasi','zonasi',NULL,NULL,NULL,NULL),
+
+('40320035','3080000035','2008-11-11','Melati Anggraeni','P',
+ 'Jl. Inspeksi Kanal No.35, Makassar','081200000035',
+ 'SMP Negeri 1 Palopo','Cluster 4',
+ 5,-5.2090,119.4990,'afirmasi','zonasi',NULL,NULL,NULL,NULL),
+
+('40320036','3080000036','2008-12-15','Irvan Hidayatullah','L',
+ 'Jl. Jampea No.36, Makassar','081200000036',
+ 'SMP Negeri 2 Palopo','Cluster 4',
+ 6,-5.2110,119.5010,'afirmasi','prestasi_mandiri',NULL,NULL,NULL,'Non-Akademik'),
+
+('40320037','3080000037','2009-01-19','Elsa Damayanti','P',
+ 'Jl. Kapasa Raya No.37, Makassar','081200000037',
+ 'SMP Negeri 1 Bulukumba','Cluster 5',
+ 7,-5.2130,119.5030,'mutasi','afirmasi',NULL,NULL,NULL,NULL),
+
+('40320038','3080000038','2009-02-23','Doni Prasetyo','L',
+ 'Jl. Landak Baru No.38, Makassar','081200000038',
+ 'SMP Negeri 2 Bulukumba','Cluster 5',
+ 8,-5.2150,119.5050,'zonasi','afirmasi',NULL,NULL,NULL,NULL),
+
+('40320039','3080000039','2009-03-27','Nisa Azzahra','P',
+ 'Jl. Maccini Raya No.39, Makassar','081200000039',
+ 'SMP Negeri 1 Sinjai','Cluster 1',
+ 9,-5.2170,119.5070,'prestasi_mandiri','zonasi',NULL,NULL,NULL,'Akademik'),
+
+('40320040','3080000040','2009-04-30','Reno Febriansyah','L',
+ 'Jl. Naja No.40, Makassar','081200000040',
+ 'SMP Negeri 1 Jeneponto','Cluster 1',
+ 10,-5.2190,119.5090,'afirmasi','mutasi',NULL,NULL,NULL,NULL),
+
+('40320041','3080000041','2009-05-04','Ayu Wulandari','P',
+ 'Jl. Orang-Orang No.41, Makassar','081200000041',
+ 'SMP Negeri 1 Bantaeng','Cluster 2',
+ 11,-5.2210,119.5110,'zonasi','prestasi_mandiri',NULL,NULL,NULL,'Non-Akademik'),
+
+('40320042','3080000042','2009-06-08','Arman Hakim','L',
+ 'Jl. Pampang No.42, Makassar','081200000042',
+ 'SMP Negeri 1 Selayar','Cluster 2',
+ 12,-5.2230,119.5130,'mutasi','zonasi',NULL,NULL,NULL,NULL),
+
+('40320043','3080000043','2009-07-12','Dinda Safitri','P',
+ 'Jl. Rusa No.43, Makassar','081200000043',
+ 'SMP Negeri 1 Wajo','Cluster 3',
+ 13,-5.2250,119.5150,'afirmasi','zonasi',NULL,NULL,NULL,NULL),
+
+('40320044','3080000044','2009-08-16','Hendra Wijaya','L',
+ 'Jl. Sungai Limboto No.44, Makassar','081200000044',
+ 'SMP Negeri 1 Sidrap','Cluster 3',
+ 14,-5.2270,119.5170,'afirmasi','prestasi_mandiri',NULL,NULL,NULL,'Akademik'),
+
+('40320045','3080000045','2009-09-20','Vina Oktaviani','P',
+ 'Jl. Toddopuli No.45, Makassar','081200000045',
+ 'SMP Negeri 1 Pinrang','Cluster 4',
+ 15,-5.2290,119.5190,'zonasi','mutasi',NULL,NULL,NULL,NULL),
+
+-- =======================================
+-- User 46-60: KERUSAKAN TIPE 4
+-- Akan menyebabkan overflow pagu sekolah
+-- Semua diarahkan ke sekolah 1 dan 2
+-- =======================================
+('40320046','3080000046','2009-10-24','Rizal Akbar','L',
+ 'Jl. Ujung No.46, Makassar','081200000046',
+ 'SMP Negeri 1 Enrekang','Cluster 4',
+ 1,-5.2310,119.5210,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320047','3080000047','2009-11-28','Nuraeni Lestari','P',
+ 'Jl. Veteran No.47, Makassar','081200000047',
+ 'SMP Negeri 1 Luwu','Cluster 5',
+ 1,-5.2330,119.5230,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320048','3080000048','2009-12-02','Agus Firmansyah','L',
+ 'Jl. Wahid Hasyim No.48, Makassar','081200000048',
+ 'SMP Negeri 1 Soppeng','Cluster 5',
+ 1,-5.2350,119.5250,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320049','3080000049','2009-01-06','Siti Nurhaliza','P',
+ 'Jl. Andi Mappanyukki No.49, Makassar','081200000049',
+ 'SMP Islam Athirah Makassar','Cluster 1',
+ 2,-5.2370,119.5270,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320050','3080000050','2009-02-10','Bima Aditya Nugraha','L',
+ 'Jl. Bandang No.50, Makassar','081200000050',
+ 'SMP Unismuh Makassar','Cluster 1',
+ 2,-5.2390,119.5290,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320051','3080000051','2009-03-14','Nurul Fadilah','P',
+ 'Jl. Cakalang No.51, Makassar','081200000051',
+ 'SMP Frater Makassar','Cluster 2',
+ 1,-5.2410,119.5310,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320052','3080000052','2009-04-18','Fahri Alamsyah','L',
+ 'Jl. Daeng Ngeppe No.52, Makassar','081200000052',
+ 'SMP Katolik Rajawali Makassar','Cluster 2',
+ 1,-5.2430,119.5330,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320053','3080000053','2009-05-22','Aldi Saputra','L',
+ 'Jl. Erna No.53, Makassar','081200000053',
+ 'SMP Negeri 1 Barru','Cluster 3',
+ 2,-5.2450,119.5350,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320054','3080000054','2009-06-26','Zahra Amalia','P',
+ 'Jl. Flamboyan No.54, Makassar','081200000054',
+ 'SMP Negeri 1 Luwu Timur','Cluster 3',
+ 2,-5.2470,119.5370,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320055','3080000055','2009-07-30','Muhammad Iqbal','L',
+ 'Jl. Gunung Latimojong No.55, Makassar','081200000055',
+ 'SMP Negeri 1 Luwu Utara','Cluster 4',
+ 1,-5.2490,119.5390,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320056','3080000056','2009-08-03','Syifa Aulia Putri','P',
+ 'Jl. Hati No.56, Makassar','081200000056',
+ 'SMP Negeri 1 Toraja Utara','Cluster 4',
+ 1,-5.2510,119.5410,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320057','3080000057','2009-09-07','Andi Muhammad Faris','L',
+ 'Jl. Imam Bonjol No.57, Makassar','081200000057',
+ 'SMP Negeri 2 Sinjai','Cluster 5',
+ 2,-5.2530,119.5430,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320058','3080000058','2009-10-11','Nur Aini Rahma','P',
+ 'Jl. Jend. Sudirman No.58, Makassar','081200000058',
+ 'SMP Negeri 2 Jeneponto','Cluster 5',
+ 2,-5.2550,119.5450,'afirmasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320059','3080000059','2009-11-15','Fikri Ramadhan','L',
+ 'Jl. Kumala No.59, Makassar','081200000059',
+ 'SMP Negeri 2 Soppeng','Cluster 1',
+ 1,-5.2570,119.5470,'zonasi',NULL,NULL,NULL,NULL,NULL),
+
+('40320060','3080000060','2009-12-19','Wulan Sari Lestari','P',
+ 'Jl. Lamuru No.60, Makassar','081200000060',
+ 'SMP Negeri 2 Wajo','Cluster 1',
+ 2,-5.2590,119.5490,'afirmasi',NULL,NULL,NULL,NULL,NULL);
+```
+
+---
+
+## STEP 4: Insert REGISTRATIONS — Semua status 'submitted' (Sengaja Rusak)
+
+```sql
+-- ============================================================
+-- REGISTRATIONS_AFIRMASI (60 data)
+-- KERUSAKAN: status semua 'submitted', tidak pernah 'accepted'
+-- Ini akan menyebabkan inkonsistensi saat penerimaan dibuat
+-- ============================================================
 INSERT INTO registrations_afirmasi (
     user_id, jenis, school_destination_id,
     distance, verification_schedule, status, documents
 ) VALUES
-( 2,'Keluarga Tidak Mampu',   1, 1.2,'2023-06-21 08:00:00','verified', 'KIP,KKS,KK'),
-( 6,'Keluarga Tidak Mampu',   3, 0.8,'2023-06-21 09:00:00','verified', 'KIP,KKS,KK'),
-( 9,'Anak Berkebutuhan Khusus',5, 2.1,'2023-06-21 10:00:00','rejected', 'Surat Dokter'),
-(13,'Keluarga Tidak Mampu',   7, 1.5,'2023-06-21 11:00:00','verified', 'KIP,KKS'),
-(17,'Penyandang Disabilitas',  9, 3.0,'2023-06-21 13:00:00','verified', 'Surat Dokter,KK'),
-(20,'Keluarga Tidak Mampu',  10, 0.5,'2023-06-21 14:00:00','accepted', 'KIP,KKS,KK'),
-(23,'Keluarga Tidak Mampu',  12, 1.8,'2023-06-22 08:00:00','verified', 'KIP,KKS'),
-(27,'Keluarga Tidak Mampu',  14, 2.5,'2023-06-22 09:00:00','rejected', 'KIP,KKS,KK'),
-(30,'Penyandang Disabilitas', 15, 1.1,'2023-06-22 10:00:00','verified', 'Surat Dokter'),
-(33,'Keluarga Tidak Mampu',  17, 0.9,'2023-06-22 11:00:00','accepted', 'KIP,KKS,KK'),
-(36,'Keluarga Tidak Mampu',  18, 1.3,'2023-06-22 13:00:00','verified', 'KIP,KKS'),
-(41,'Anak Berkebutuhan Khusus',21,2.0,'2023-06-22 14:00:00','verified', 'Surat Dokter,KK'),
-(44,'Keluarga Tidak Mampu',  22, 0.7,'2023-06-22 15:00:00','accepted', 'KIP,KKS,KK'),
-(47,'Keluarga Tidak Mampu',  24, 1.6,'2023-06-22 16:00:00','verified', 'KIP,KKS'),
-(50,'Keluarga Tidak Mampu',  25, 2.3,'2023-06-22 17:00:00','rejected', 'KIP,KKS,KK'),
-( 1,'Anak Berkebutuhan Khusus',1, 0.4,'2023-06-21 08:30:00','pending',  'Surat Dokter'),
-( 5,'Keluarga Tidak Mampu',   3, 1.7,'2023-06-21 09:30:00','pending',  'KIP,KKS'),
-( 8,'Keluarga Tidak Mampu',   4, 0.6,'2023-06-21 10:30:00','verified', 'KIP,KKS,KK'),
-(12,'Penyandang Disabilitas',  6, 2.2,'2023-06-21 11:30:00','verified', 'Surat Dokter'),
-(16,'Keluarga Tidak Mampu',   8, 1.0,'2023-06-21 14:30:00','accepted', 'KIP,KKS,KK'),
-(19,'Keluarga Tidak Mampu',  10, 1.4,'2023-06-21 15:30:00','verified', 'KIP,KKS'),
-(22,'Keluarga Tidak Mampu',  11, 0.3,'2023-06-21 16:30:00','rejected', 'KIP,KKS,KK'),
-(25,'Penyandang Disabilitas', 13, 1.9,'2023-06-22 08:30:00','verified', 'Surat Dokter,KK'),
-(28,'Keluarga Tidak Mampu',  14, 2.6,'2023-06-22 09:30:00','accepted', 'KIP,KKS,KK'),
-(31,'Keluarga Tidak Mampu',  16, 0.8,'2023-06-22 10:30:00','verified', 'KIP,KKS'),
-(34,'Keluarga Tidak Mampu',  17, 1.2,'2023-06-22 11:30:00','verified', 'KIP,KKS,KK'),
-(37,'Anak Berkebutuhan Khusus',19,2.7,'2023-06-22 13:30:00','rejected', 'Surat Dokter'),
-(40,'Keluarga Tidak Mampu',  20, 0.5,'2023-06-22 14:30:00','accepted', 'KIP,KKS'),
-(43,'Keluarga Tidak Mampu',  22, 1.8,'2023-06-22 15:30:00','verified', 'KIP,KKS,KK'),
-(46,'Penyandang Disabilitas', 23, 3.1,'2023-06-22 16:30:00','verified', 'Surat Dokter,KK'),
-(49,'Keluarga Tidak Mampu',  25, 1.5,'2023-06-22 17:30:00','pending',  'KIP,KKS'),
-( 3,'Keluarga Tidak Mampu',   2, 0.9,'2023-06-21 08:00:00','verified', 'KIP,KKS,KK'),
-( 7,'Keluarga Tidak Mampu',   4, 2.0,'2023-06-21 09:00:00','accepted', 'KIP,KKS'),
-(10,'Penyandang Disabilitas',  5, 1.3,'2023-06-21 10:00:00','verified', 'Surat Dokter'),
-(14,'Keluarga Tidak Mampu',   7, 0.7,'2023-06-21 11:00:00','rejected', 'KIP,KKS,KK'),
-(18,'Keluarga Tidak Mampu',   9, 1.6,'2023-06-21 13:00:00','verified', 'KIP,KKS'),
-(21,'Keluarga Tidak Mampu',  11, 2.4,'2023-06-21 14:00:00','accepted', 'KIP,KKS,KK'),
-(24,'Anak Berkebutuhan Khusus',12,0.6,'2023-06-22 08:00:00','verified', 'Surat Dokter'),
-(26,'Keluarga Tidak Mampu',  13, 1.1,'2023-06-22 09:00:00','verified', 'KIP,KKS'),
-(29,'Keluarga Tidak Mampu',  15, 2.8,'2023-06-22 10:00:00','rejected', 'KIP,KKS,KK'),
-(32,'Keluarga Tidak Mampu',  16, 0.4,'2023-06-22 11:00:00','accepted', 'KIP,KKS'),
-(35,'Penyandang Disabilitas', 18, 1.7,'2023-06-22 13:00:00','verified', 'Surat Dokter,KK'),
-(38,'Keluarga Tidak Mampu',  19, 0.8,'2023-06-22 14:00:00','verified', 'KIP,KKS,KK'),
-(39,'Keluarga Tidak Mampu',  20, 1.3,'2023-06-22 15:00:00','pending',  'KIP,KKS'),
-(42,'Keluarga Tidak Mampu',  21, 2.1,'2023-06-22 16:00:00','verified', 'KIP,KKS,KK'),
-(45,'Anak Berkebutuhan Khusus',23,0.9,'2023-06-22 17:00:00','rejected', 'Surat Dokter'),
-(48,'Keluarga Tidak Mampu',  24, 1.4,'2023-06-22 08:00:00','accepted', 'KIP,KKS'),
-( 4,'Keluarga Tidak Mampu',   2, 2.5,'2023-06-21 09:00:00','verified', 'KIP,KKS,KK'),
-(11,'Penyandang Disabilitas',  6, 0.7,'2023-06-21 10:00:00','verified', 'Surat Dokter'),
-(15,'Keluarga Tidak Mampu',   8, 1.8,'2023-06-21 11:00:00','accepted', 'KIP,KKS');
-```
+-- User 1-15 (normal flow, tapi status tetap 'submitted' = rusak)
+(1,  'KIP/PIP',  1, 1.20,'2023-06-19 08:00:00','submitted','dok_afirmasi_01.pdf'),
+(2,  'KIP/PIP',  2, 2.10,'2023-06-19 08:10:00','submitted','dok_afirmasi_02.pdf'),
+(3,  'KIP/PIP',  3, 1.80,'2023-06-19 08:20:00','submitted','dok_afirmasi_03.pdf'),
+(4,  'KIP/PIP',  4, 3.40,'2023-06-19 08:30:00','submitted','dok_afirmasi_04.pdf'),
+(5,  'KIP/PIP',  5, 2.60,'2023-06-19 08:40:00','submitted','dok_afirmasi_05.pdf'),
+(6,  'KIP/PIP',  6, 1.50,'2023-06-19 08:50:00','submitted','dok_afirmasi_06.pdf'),
+(7,  'KIP/PIP',  7, 4.20,'2023-06-19 09:00:00','submitted','dok_afirmasi_07.pdf'),
+(8,  'KIP/PIP',  8, 3.10,'2023-06-19 09:10:00','submitted','dok_afirmasi_08.pdf'),
+(9,  'KIP/PIP',  9, 2.90,'2023-06-19 09:20:00','submitted','dok_afirmasi_09.pdf'),
+(10, 'KIP/PIP', 10, 1.70,'2023-06-19 09:30:00','submitted','dok_afirmasi_10.pdf'),
+(11, 'KIP/PIP', 11, 2.30,'2023-06-19 09:40:00','submitted','dok_afirmasi_11.pdf'),
+(12, 'KIP/PIP', 12, 4.50,'2023-06-19 09:50:00','submitted','dok_afirmasi_12.pdf'),
+(13, 'KIP/PIP', 13, 3.80,'2023-06-19 10:00:00','submitted','dok_afirmasi_13.pdf'),
+(14, 'KIP/PIP', 14, 1.40,'2023-06-19 10:10:00','submitted','dok_afirmasi_14.pdf'),
+(15, 'KIP/PIP', 15, 2.70,'2023-06-19 10:20:00','submitted','dok_afirmasi_15.pdf'),
+-- User 16-30 (inkonsistensi: akan approved tapi penerimaan hilang)
+(16, 'KIP/PIP',  1, 1.10,'2023-06-19 10:30:00','submitted','dok_afirmasi_16.pdf'),
+(17, 'KIP/PIP',  2, 2.20,'2023-06-19 10:40:00','submitted','dok_afirmasi_17.pdf'),
+(18, 'KIP/PIP',  3, 3.30,'2023-06-19 10:50:00','submitted','dok_afirmasi_18.pdf'),
+(19, 'KIP/PIP',  4, 1.60,'2023-06-19 11:00:00','submitted','dok_afirmasi_19.pdf'),
+(20, 'KIP/PIP',  5, 2.40,'2023-06-19 11:10:00','submitted','dok_afirmasi_20.pdf'),
+(21, 'KIP/PIP',  6, 3.70,'2023-06-19 11:20:00','submitted','dok_afirmasi_21.pdf'),
+(22, 'KIP/PIP',  7, 1.30,'2023-06-19 11:30:00','submitted','dok_afirmasi_22.pdf'),
+(23, 'KIP/PIP',  8, 4.10,'2023-06-19 11:40:00','submitted','dok_afirmasi_23.pdf'),
+(24, 'KIP/PIP',  9, 2.80,'2023-06-19 11:50:00','submitted','dok_afirmasi_24.pdf'),
+(25, 'KIP/PIP', 10, 1.90,'2023-06-19 12:00:00','submitted','dok_afirmasi_25.pdf'),
+(26, 'KIP/PIP', 11, 3.20,'2023-06-19 12:10:00','submitted','dok_afirmasi_26.pdf'),
+(27, 'KIP/PIP', 12, 2.50,'2023-06-19 12:20:00','submitted','dok_afirmasi_27.pdf'),
+(28, 'KIP/PIP', 13, 4.30,'2023-06-19 12:30:00','submitted','dok_afirmasi_28.pdf'),
+(29, 'KIP/PIP', 14, 1.80,'2023-06-19 12:40:00','submitted','dok_afirmasi_29.pdf'),
+(30, 'KIP/PIP', 15, 3.60,'2023-06-19 12:50:00','submitted','dok_afirmasi_30.pdf'),
+-- User 31-45 (daftar di afirmasi DAN jalur lain = multi jalur)
+(31, 'KIP/PIP',  1, 1.50,'2023-06-19 13:00:00','submitted','dok_afirmasi_31.pdf'),
+(32, 'KIP/PIP',  2, 2.70,'2023-06-19 13:10:00','submitted','dok_afirmasi_32.pdf'),
+(33, 'Disabilitas',3,1.20,'2023-06-19 13:20:00','submitted','dok_afirmasi_33.pdf'),
+(34, 'KIP/PIP',  4, 3.10,'2023-06-19 13:30:00','submitted','dok_afirmasi_34.pdf'),
+(35, 'KIP/PIP',  5, 2.30,'2023-06-19 13:40:00','submitted','dok_afirmasi_35.pdf'),
+(36, 'KIP/PIP',  6, 4.40,'2023-06-19 13:50:00','submitted','dok_afirmasi_36.pdf'),
+(37, 'KIP/PIP',  7, 1.70,'2023-06-19 14:00:00','submitted','dok_afirmasi_37.pdf'),
+(38, 'Disabilitas',8,3.90,'2023-06-19 14:10:00','submitted','dok_afirmasi_38.pdf'),
+(39, 'KIP/PIP',  9, 2.10,'2023-06-19 14:20:00','submitted','dok_afirmasi_39.pdf'),
+(40, 'KIP/PIP', 10, 1.40,'2023-06-19 14:30:00','submitted','dok_afirmasi_40.pdf'),
+(41, 'Tidak Mampu',11,3.60,'2023-06-19 14:40:00','submitted','dok_afirmasi_41.pdf'),
+(42, 'KIP/PIP', 12, 2.80,'2023-06-19 14:50:00','submitted','dok_afirmasi_42.pdf'),
+(43, 'KIP/PIP', 13, 4.20,'2023-06-19 15:00:00','submitted','dok_afirmasi_43.pdf'),
+(44, 'KIP/PIP', 14, 1.60,'2023-06-19 15:10:00','submitted','dok_afirmasi_44.pdf'),
+(45, 'Tidak Mampu',15,3.30,'2023-06-19 15:20:00','submitted','dok_afirmasi_45.pdf'),
+-- User 46-60 (overflow pagu sekolah 1 dan 2)
+(46, 'KIP/PIP',  1, 2.10,'2023-06-19 15:30:00','submitted','dok_afirmasi_46.pdf'),
+(47, 'KIP/PIP',  1, 1.80,'2023-06-19 15:40:00','submitted','dok_afirmasi_47.pdf'),
+(48, 'KIP/PIP',  1, 3.20,'2023-06-19 15:50:00','submitted','dok_afirmasi_48.pdf'),
+(49, 'KIP/PIP',  2, 2.50,'2023-06-19 16:00:00','submitted','dok_afirmasi_49.pdf'),
+(50, 'KIP/PIP',  2, 1.40,'2023-06-19 16:10:00','submitted','dok_afirmasi_50.pdf'),
+(51, 'KIP/PIP',  1, 4.10,'2023-06-19 16:20:00','submitted','dok_afirmasi_51.pdf'),
+(52, 'KIP/PIP',  1, 2.90,'2023-06-19 16:30:00','submitted','dok_afirmasi_52.pdf'),
+(53, 'KIP/PIP',  2, 3.70,'2023-06-19 16:40:00','submitted','dok_afirmasi_53.pdf'),
+(54, 'KIP/PIP',  2, 1.20,'2023-06-19 16:50:00','submitted','dok_afirmasi_54.pdf'),
+(55, 'KIP/PIP',  1, 2.60,'2023-06-19 17:00:00','submitted','dok_afirmasi_55.pdf'),
+(56, 'KIP/PIP',  1, 3.40,'2023-06-19 17:10:00','submitted','dok_afirmasi_56.pdf'),
+(57, 'KIP/PIP',  2, 1.90,'2023-06-19 17:20:00','submitted','dok_afirmasi_57.pdf'),
+(58, 'KIP/PIP',  2, 4.30,'2023-06-19 17:30:00','submitted','dok_afirmasi_58.pdf'),
+(59, 'KIP/PIP',  1, 2.10,'2023-06-19 17:40:00','submitted','dok_afirmasi_59.pdf'),
+(60, 'KIP/PIP',  2, 3.50,'2023-06-19 17:50:00','submitted','dok_afirmasi_60.pdf');
 
-### 2.2.2 Insert Registrations Mutasi
-
-```sql
--- Registrations Mutasi (50 data)
+-- ============================================================
+-- REGISTRATIONS_MUTASI (60 data)
+-- ============================================================
 INSERT INTO registrations_mutasi (
     user_id, jenis, school_destination_id,
     distance, verification_schedule, status, documents
 ) VALUES
-( 4,'Pindah Tugas Orang Tua',  2, 5.2,'2023-06-21 08:00:00','verified', 'SK Mutasi,KK'),
-(11,'Pindah Tugas Orang Tua',  6, 8.3,'2023-06-21 09:00:00','accepted', 'SK Mutasi,KK'),
-(18,'Pindah Tugas Orang Tua',  9, 3.7,'2023-06-21 10:00:00','rejected', 'SK Mutasi'),
-(25,'Pindah Tugas Orang Tua', 13, 6.1,'2023-06-21 11:00:00','verified', 'SK Mutasi,KK'),
-(32,'Pindah Tugas Orang Tua', 16, 4.5,'2023-06-21 13:00:00','accepted', 'SK Mutasi,KK'),
-(39,'Pindah Tugas Orang Tua', 20, 7.2,'2023-06-21 14:00:00','verified', 'SK Mutasi'),
-(46,'Pindah Tugas Orang Tua', 23, 2.9,'2023-06-21 15:00:00','pending',  'SK Mutasi,KK'),
-( 1,'Pindah Tugas Orang Tua',  1, 9.0,'2023-06-22 08:00:00','verified', 'SK Mutasi,KK'),
-( 8,'Pindah Tugas Orang Tua',  4, 5.5,'2023-06-22 09:00:00','accepted', 'SK Mutasi'),
-(15,'Pindah Tugas Orang Tua',  8, 3.1,'2023-06-22 10:00:00','verified', 'SK Mutasi,KK'),
-(22,'Pindah Tugas Orang Tua', 11, 7.8,'2023-06-22 11:00:00','rejected', 'SK Mutasi'),
-(29,'Pindah Tugas Orang Tua', 15, 4.2,'2023-06-22 13:00:00','verified', 'SK Mutasi,KK'),
-(36,'Pindah Tugas Orang Tua', 18, 6.6,'2023-06-22 14:00:00','accepted', 'SK Mutasi,KK'),
-(43,'Pindah Tugas Orang Tua', 22, 2.3,'2023-06-22 15:00:00','pending',  'SK Mutasi'),
-(50,'Pindah Tugas Orang Tua', 25, 8.9,'2023-06-22 16:00:00','verified', 'SK Mutasi,KK'),
-( 5,'Pindah Tugas Orang Tua',  3, 4.8,'2023-06-21 08:30:00','verified', 'SK Mutasi'),
-(12,'Pindah Tugas Orang Tua',  6, 6.3,'2023-06-21 09:30:00','accepted', 'SK Mutasi,KK'),
-(19,'Pindah Tugas Orang Tua', 10, 3.0,'2023-06-21 10:30:00','rejected', 'SK Mutasi'),
-(26,'Pindah Tugas Orang Tua', 13, 5.7,'2023-06-21 11:30:00','verified', 'SK Mutasi,KK'),
-(33,'Pindah Tugas Orang Tua', 17, 7.1,'2023-06-21 13:30:00','accepted', 'SK Mutasi,KK'),
-(40,'Pindah Tugas Orang Tua', 20, 2.6,'2023-06-21 14:30:00','verified', 'SK Mutasi'),
-(47,'Pindah Tugas Orang Tua', 24, 8.4,'2023-06-21 15:30:00','pending',  'SK Mutasi,KK'),
-( 2,'Pindah Tugas Orang Tua',  1, 4.1,'2023-06-22 08:30:00','verified', 'SK Mutasi'),
-( 9,'Pindah Tugas Orang Tua',  5, 6.9,'2023-06-22 09:30:00','accepted', 'SK Mutasi,KK'),
-(16,'Pindah Tugas Orang Tua',  8, 3.4,'2023-06-22 10:30:00','verified', 'SK Mutasi'),
-(23,'Pindah Tugas Orang Tua', 12, 7.5,'2023-06-22 11:30:00','rejected', 'SK Mutasi,KK'),
-(30,'Pindah Tugas Orang Tua', 15, 4.9,'2023-06-22 13:30:00','verified', 'SK Mutasi'),
-(37,'Pindah Tugas Orang Tua', 19, 6.2,'2023-06-22 14:30:00','accepted', 'SK Mutasi,KK'),
-(44,'Pindah Tugas Orang Tua', 22, 2.7,'2023-06-22 15:30:00','pending',  'SK Mutasi'),
-(49,'Pindah Tugas Orang Tua', 25, 8.0,'2023-06-22 16:30:00','verified', 'SK Mutasi,KK'),
-( 6,'Pindah Tugas Orang Tua',  3, 5.3,'2023-06-21 09:00:00','verified', 'SK Mutasi'),
-(13,'Pindah Tugas Orang Tua',  7, 7.8,'2023-06-21 10:00:00','accepted', 'SK Mutasi,KK'),
-(20,'Pindah Tugas Orang Tua', 10, 3.6,'2023-06-21 11:00:00','rejected', 'SK Mutasi'),
-(27,'Pindah Tugas Orang Tua', 14, 6.4,'2023-06-21 13:00:00','verified', 'SK Mutasi,KK'),
-(34,'Pindah Tugas Orang Tua', 17, 4.0,'2023-06-21 14:00:00','accepted', 'SK Mutasi,KK'),
-(41,'Pindah Tugas Orang Tua', 21, 8.7,'2023-06-21 15:00:00','pending',  'SK Mutasi'),
-(48,'Pindah Tugas Orang Tua', 24, 2.2,'2023-06-21 16:00:00','verified', 'SK Mutasi,KK'),
-( 3,'Pindah Tugas Orang Tua',  2, 5.8,'2023-06-22 09:00:00','accepted', 'SK Mutasi'),
-(10,'Pindah Tugas Orang Tua',  5, 3.3,'2023-06-22 10:00:00','verified', 'SK Mutasi,KK'),
-(17,'Pindah Tugas Orang Tua',  9, 7.0,'2023-06-22 11:00:00','rejected', 'SK Mutasi'),
-(24,'Pindah Tugas Orang Tua', 12, 4.6,'2023-06-22 13:00:00','verified', 'SK Mutasi,KK'),
-(31,'Pindah Tugas Orang Tua', 16, 6.8,'2023-06-22 14:00:00','accepted', 'SK Mutasi,KK'),
-(38,'Pindah Tugas Orang Tua', 19, 2.4,'2023-06-22 15:00:00','pending',  'SK Mutasi'),
-(45,'Pindah Tugas Orang Tua', 23, 8.1,'2023-06-22 16:00:00','verified', 'SK Mutasi,KK'),
-( 7,'Pindah Tugas Orang Tua',  4, 5.0,'2023-06-21 09:30:00','verified', 'SK Mutasi'),
-(14,'Pindah Tugas Orang Tua',  7, 7.3,'2023-06-21 10:30:00','accepted', 'SK Mutasi,KK'),
-(21,'Pindah Tugas Orang Tua', 11, 3.8,'2023-06-21 11:30:00','rejected', 'SK Mutasi'),
-(28,'Pindah Tugas Orang Tua', 14, 6.5,'2023-06-21 13:30:00','verified', 'SK Mutasi,KK'),
-(35,'Pindah Tugas Orang Tua', 18, 4.3,'2023-06-21 14:30:00','accepted', 'SK Mutasi'),
-(42,'Pindah Tugas Orang Tua', 21, 8.6,'2023-06-21 15:30:00','pending',  'SK Mutasi,KK');
-```
+(1, 'Perpindahan Tugas Orang Tua', 1,1.20,'2023-06-19 08:05:00','submitted','dok_mutasi_01.pdf'),
+(2, 'Perpindahan Tugas Orang Tua', 2,2.10,'2023-06-19 08:15:00','submitted','dok_mutasi_02.pdf'),
+(3, 'Perpindahan Tugas Orang Tua', 3,1.80,'2023-06-19 08:25:00','submitted','dok_mutasi_03.pdf'),
+(4, 'Perpindahan Tugas Orang Tua', 4,3.40,'2023-06-19 08:35:00','submitted','dok_mutasi_04.pdf'),
+(5, 'Perpindahan Tugas Orang Tua', 5,2.60,'2023-06-19 08:45:00','submitted','dok_mutasi_05.pdf'),
+(6, 'Perpindahan Tugas Orang Tua', 6,1.50,'2023-06-19 08:55:00','submitted','dok_mutasi_06.pdf'),
+(7, 'Perpindahan Tugas Orang Tua', 7,4.20,'2023-06-19 09:05:00','submitted','dok_mutasi_07.pdf'),
+(8, 'Perpindahan Tugas Orang Tua', 8,3.10,'2023-06-19 09:15:00','submitted','dok_mutasi_08.pdf'),
+(9, 'Perpindahan Tugas Orang Tua', 9,2.90,'2023-06-19 09:25:00','submitted','dok_mutasi_09.pdf'),
+(10,'Perpindahan Tugas Orang Tua',10,1.70,'2023-06-19 09:35:00','submitted','dok_mutasi_10.pdf'),
+(11,'Perpindahan Tugas Orang Tua',11,2.30,'2023-06-19 09:45:00','submitted','dok_mutasi_11.pdf'),
+(12,'Perpindahan Tugas Orang Tua',12,4.50,'2023-06-19 09:55:00','submitted','dok_mutasi_12.pdf'),
+(13,'Perpindahan Tugas Orang Tua',13,3.80,'2023-06-19 10:05:00','submitted','dok_mutasi_13.pdf'),
+(14,'Perpindahan Tugas Orang Tua',14,1.40,'2023-06-19 10:15:00','submitted','dok_mutasi_14.pdf'),
+(15,'Perpindahan Tugas Orang Tua',15,2.70,'2023-06-19 10:25:00','submitted','dok_mutasi_15.pdf'),
+(16,'Perpindahan Tugas Orang Tua', 1,1.10,'2023-06-19 10:35:00','submitted','dok_mutasi_16.pdf'),
+(17,'Perpindahan Tugas Orang Tua', 2,2.20,'2023-06-19 10:45:00','submitted','dok_mutasi_17.pdf'),
+(18,'Perpindahan Tugas Orang Tua', 3,3.30,'2023-06-19 10:55:00','submitted','dok_mutasi_18.pdf'),
+(19,'Perpindahan Tugas Orang Tua', 4,1.60,'2023-06-19 11:05:00','submitted','dok_mutasi_19.pdf'),
+(20,'Perpindahan Tugas Orang Tua', 5,2.40,'2023-06-19 11:15:00','submitted','dok_mutasi_20.pdf'),
+(21,'Perpindahan Tugas Orang Tua', 6,3.70,'2023-06-19 11:25:00','submitted','dok_mutasi_21.pdf'),
+(22,'Perpindahan Tugas Orang Tua', 7,1.30,'2023-06-19 11:35:00','submitted','dok_mutasi_22.pdf'),
+(23,'Perpindahan Tugas Orang Tua', 8,4.10,'2023-06-19 11:45:00','submitted','dok_mutasi_23.pdf'),
+(24,'Perpindahan Tugas Orang Tua', 9,2.80,'2023-06-19 11:55:00','submitted','dok_mutasi_24.pdf'),
+(25,'Perpindahan Tugas Orang Tua',10,1.90,'2023-06-19 12:05:00','submitted','dok_mutasi_25.pdf'),
+(26,'Perpindahan Tugas Orang Tua',11,3.20,'2023-06-19 12:15:00','submitted','dok_mutasi_26.pdf'),
+(27,'Perpindahan Tugas Orang Tua',12,2.50,'2023-06-19 12:25:00','submitted','dok_mutasi_27.pdf'),
+(28,'Perpindahan Tugas Orang Tua',13,4.30,'2023-06-19 12:35:00','submitted','dok_mutasi_28.pdf'),
+(29,'Perpindahan Tugas Orang Tua',14,1.80,'2023-06-19 12:45:00','submitted','dok_mutasi_29.pdf'),
+(30,'Perpindahan Tugas Orang Tua',15,3.60,'2023-06-19 12:55:00','submitted','dok_mutasi_30.pdf'),
+(31,'Perpindahan Tugas Orang Tua', 1,1.50,'2023-06-19 13:05:00','submitted','dok_mutasi_31.pdf'),
+(32,'Perpindahan Tugas Orang Tua', 2,2.70,'2023-06-19 13:15:00','submitted','dok_mutasi_32.pdf'),
+(33,'Perpindahan Tugas Orang Tua', 3,1.20,'2023-06-19 13:25:00','submitted','dok_mutasi_33.pdf'),
+(34,'Perpindahan Tugas Orang Tua', 4,3.10,'2023-06-19 13:35:00','submitted','dok_mutasi_34.pdf'),
+(35,'Perpindahan Tugas Orang Tua', 5,2.30,'2023-06-19 13:45:00','submitted','dok_mutasi_35.pdf'),
+(36,'Perpindahan Tugas Orang Tua', 6,4.40,'2023-06-19 13:55:00','submitted','dok_mutasi_36.pdf'),
+(37,'Perpindahan Tugas Orang Tua', 7,1.70,'2023-06-19 14:05:00','submitted','dok_mutasi_37.pdf'),
+(38,'Perpindahan Tugas Orang Tua', 8,3.90,'2023-06-19 14:15:00','submitted','dok_mutasi_38.pdf'),
+(39,'Perpindahan Tugas Orang Tua', 9,2.10,'2023-06-19 14:25:00','submitted','dok_mutasi_39.pdf'),
+(40,'Perpindahan Tugas Orang Tua',10,1.40,'2023-06-19 14:35:00','submitted','dok_mutasi_40.pdf'),
+(41,'Perpindahan Tugas Orang Tua',11,3.60,'2023-06-19 14:45:00','submitted','dok_mutasi_41.pdf'),
+(42,'Perpindahan Tugas Orang Tua',12,2.80,'2023-06-19 14:55:00','submitted','dok_mutasi_42.pdf'),
+(43,'Perpindahan Tugas Orang Tua',13,4.20,'2023-06-19 15:05:00','submitted','dok_mutasi_43.pdf'),
+(44,'Perpindahan Tugas Orang Tua',14,1.60,'2023-06-19 15:15:00','submitted','dok_mutasi_44.pdf'),
+(45,'Perpindahan Tugas Orang Tua',15,3.30,'2023-06-19 15:25:00','submitted','dok_mutasi_45.pdf'),
+(46,'Perpindahan Tugas Orang Tua', 1,2.10,'2023-06-19 15:35:00','submitted','dok_mutasi_46.pdf'),
+(47,'Perpindahan Tugas Orang Tua', 2,1.80,'2023-06-19 15:45:00','submitted','dok_mutasi_47.pdf'),
+(48,'Perpindahan Tugas Orang Tua', 3,3.20,'2023-06-19 15:55:00','submitted','dok_mutasi_48.pdf'),
+(49,'Perpindahan Tugas Orang Tua', 4,2.50,'2023-06-19 16:05:00','submitted','dok_mutasi_49.pdf'),
+(50,'Perpindahan Tugas Orang Tua', 5,1.40,'2023-06-19 16:15:00','submitted','dok_mutasi_50.pdf'),
+(51,'Perpindahan Tugas Orang Tua', 6,4.10,'2023-06-19 16:25:00','submitted','dok_mutasi_51.pdf'),
+(52,'Perpindahan Tugas Orang Tua', 7,2.90,'2023-06-19 16:35:00','submitted','dok_mutasi_52.pdf'),
+(53,'Perpindahan Tugas Orang Tua', 8,3.70,'2023-06-19 16:45:00','submitted','dok_mutasi_53.pdf'),
+(54,'Perpindahan Tugas Orang Tua', 9,1.20,'2023-06-19 16:55:00','submitted','dok_mutasi_54.pdf'),
+(55,'Perpindahan Tugas Orang Tua',10,2.60,'2023-06-19 17:05:00','submitted','dok_mutasi_55.pdf'),
+(56,'Perpindahan Tugas Orang Tua',11,3.40,'2023-06-19 17:15:00','submitted','dok_mutasi_56.pdf'),
+(57,'Perpindahan Tugas Orang Tua',12,1.90,'2023-06-19 17:25:00','submitted','dok_mutasi_57.pdf'),
+(58,'Perpindahan Tugas Orang Tua',13,4.30,'2023-06-19 17:35:00','submitted','dok_mutasi_58.pdf'),
+(59,'Perpindahan Tugas Orang Tua',14,2.10,'2023-06-19 17:45:00','submitted','dok_mutasi_59.pdf'),
+(60,'Perpindahan Tugas Orang Tua',15,3.50,'2023-06-19 17:55:00','submitted','dok_mutasi_60.pdf');
 
-### 2.2.3 Insert Registrations Prestasi Mandiri
-
-```sql
--- Registrations Prestasi Mandiri (50 data)
+-- ============================================================
+-- REGISTRATIONS_PRESTASI_MANDIRI (60 data)
+-- ============================================================
 INSERT INTO registrations_prestasi_mandiri (
-    user_id, data, school_destination_id,
-    distance, verification_schedule, status, documents,
+    user_id, data, school_destination_id, distance,
+    verification_schedule, status, documents,
     test_number, final_score, test_score, jurusan, ruang_tes
 ) VALUES
-( 3,'Juara 1 OSN Matematika',    2, 2.1,'2023-06-21 08:00:00','verified', 'Sertifikat,Rapor','PM001',88.50,85.00,'IPA','R01'),
-( 7,'Juara 2 O2SN Badminton',    4, 3.5,'2023-06-21 09:00:00','accepted', 'Sertifikat,Rapor','PM002',82.00,79.50,'IPS','R02'),
-(15,'Juara 1 FLS2N Seni Tari',   8, 1.8,'2023-06-21 10:00:00','verified', 'Sertifikat,Rapor','PM003',85.75,83.00,'IPS','R01'),
-(22,'Juara 3 OSN IPA',          11, 4.2,'2023-06-21 11:00:00','rejected', 'Sertifikat',      'PM004',70.25,68.50,'IPA','R03'),
-(29,'Juara 1 Karate Nasional',  15, 2.9,'2023-06-21 13:00:00','verified', 'Sertifikat,Rapor','PM005',87.00,84.50,'IPA','R02'),
-(38,'Juara 2 FLS2N Voli',       19, 5.1,'2023-06-21 14:00:00','accepted', 'Sertifikat,Rapor','PM006',83.50,81.00,'IPS','R01'),
-(43,'Juara 1 OSN Komputer',     22, 1.4,'2023-06-21 15:00:00','verified', 'Sertifikat,Rapor','PM007',91.00,88.50,'IPA','R03'),
-( 1,'Juara 3 O2SN Renang',       1, 0.7,'2023-06-22 08:00:00','pending',  'Sertifikat',      'PM008',75.00,73.00,'IPS','R02'),
-( 5,'Juara 2 OSN Biologi',       3, 3.2,'2023-06-22 09:00:00','verified', 'Sertifikat,Rapor','PM009',86.25,83.75,'IPA','R01'),
-(10,'Juara 1 Silat Provinsi',    5, 2.6,'2023-06-22 10:00:00','accepted', 'Sertifikat,Rapor','PM010',80.50,78.00,'IPS','R03'),
-(14,'Juara 3 FLS2N Musik',       7, 4.8,'2023-06-22 11:00:00','verified', 'Sertifikat',      'PM011',73.75,71.25,'IPS','R02'),
-(19,'Juara 1 OSN Astronomi',    10, 1.3,'2023-06-22 13:00:00','accepted', 'Sertifikat,Rapor','PM012',89.00,86.50,'IPA','R01'),
-(24,'Juara 2 O2SN Basket',      12, 3.9,'2023-06-22 14:00:00','rejected', 'Sertifikat',      'PM013',71.50,69.00,'IPS','R03'),
-(31,'Juara 1 OSN Kimia',        16, 2.3,'2023-06-22 15:00:00','verified', 'Sertifikat,Rapor','PM014',87.75,85.25,'IPA','R02'),
-(36,'Juara 3 O2SN Atletik',     18, 5.7,'2023-06-22 16:00:00','accepted', 'Sertifikat,Rapor','PM015',81.00,78.50,'IPS','R01'),
-(41,'Juara 2 FLS2N Lukis',      21, 1.9,'2023-06-22 17:00:00','verified', 'Sertifikat,Rapor','PM016',84.25,81.75,'IPS','R03'),
-(46,'Juara 1 OSN Ekonomi',      23, 3.6,'2023-06-21 08:30:00','pending',  'Sertifikat',      'PM017',76.50,74.00,'IPS','R02'),
-( 2,'Juara 3 OSN Fisika',        1, 2.8,'2023-06-21 09:30:00','verified', 'Sertifikat,Rapor','PM018',85.00,82.50,'IPA','R01'),
-( 6,'Juara 1 FLS2N Tari',        3, 4.4,'2023-06-21 10:30:00','accepted', 'Sertifikat,Rapor','PM019',82.75,80.25,'IPS','R03'),
-(11,'Juara 2 Karate Provinsi',   6, 1.6,'2023-06-21 11:30:00','verified', 'Sertifikat,Rapor','PM020',88.00,85.50,'IPA','R02'),
-(16,'Juara 1 O2SN Sepak Bola',   8, 3.1,'2023-06-21 13:30:00','rejected', 'Sertifikat',      'PM021',69.25,67.75,'IPS','R01'),
-(21,'Juara 3 OSN Geografi',     11, 5.3,'2023-06-21 14:30:00','accepted', 'Sertifikat,Rapor','PM022',80.00,77.50,'IPS','R03'),
-(26,'Juara 1 FLS2N Puisi',      13, 2.5,'2023-06-21 15:30:00','verified', 'Sertifikat,Rapor','PM023',86.50,84.00,'IPS','R02'),
-(33,'Juara 2 OSN Informatika',  17, 4.0,'2023-06-22 08:30:00','pending',  'Sertifikat',      'PM024',77.75,75.25,'IPA','R01'),
-(40,'Juara 1 O2SN Tenis',       20, 1.7,'2023-06-22 09:30:00','accepted', 'Sertifikat,Rapor','PM025',83.00,80.50,'IPS','R03'),
-(45,'Juara 3 FLS2N Band',       23, 3.3,'2023-06-22 10:30:00','verified', 'Sertifikat,Rapor','PM026',85.50,83.00,'IPS','R02'),
-(50,'Juara 1 OSN Kebumian',     25, 5.9,'2023-06-22 11:30:00','rejected', 'Sertifikat',      'PM027',68.50,66.00,'IPA','R01'),
-( 4,'Juara 2 O2SN Judo',         2, 2.4,'2023-06-22 13:30:00','verified', 'Sertifikat,Rapor','PM028',84.75,82.25,'IPS','R03'),
-( 9,'Juara 1 OSN Matematika',    5, 4.6,'2023-06-22 14:30:00','accepted', 'Sertifikat,Rapor','PM029',90.25,87.75,'IPA','R02'),
-(13,'Juara 3 FLS2N Vokal',       7, 1.2,'2023-06-22 15:30:00','verified', 'Sertifikat,Rapor','PM030',82.50,80.00,'IPS','R01'),
-(18,'Juara 2 Silat Nasional',    9, 3.8,'2023-06-22 16:30:00','pending',  'Sertifikat',      'PM031',74.00,71.50,'IPS','R03'),
-(23,'Juara 1 OSN Biologi',      12, 5.2,'2023-06-21 09:00:00','accepted', 'Sertifikat,Rapor','PM032',89.50,87.00,'IPA','R02'),
-(28,'Juara 3 O2SN Bulutangkis', 14, 2.1,'2023-06-21 10:00:00','verified', 'Sertifikat,Rapor','PM033',85.25,82.75,'IPS','R01'),
-(35,'Juara 1 FLS2N Seni Rupa',  18, 4.7,'2023-06-21 11:00:00','rejected', 'Sertifikat',      'PM034',70.75,68.25,'IPS','R03'),
-(42,'Juara 2 OSN Kimia',        21, 1.5,'2023-06-21 13:00:00','accepted', 'Sertifikat,Rapor','PM035',86.00,83.50,'IPA','R02'),
-(47,'Juara 1 O2SN Sepak Takraw',24, 3.4,'2023-06-21 14:00:00','verified', 'Sertifikat,Rapor','PM036',83.75,81.25,'IPS','R01'),
-( 8,'Juara 3 OSN Astronomi',     4, 5.6,'2023-06-21 15:00:00','pending',  'Sertifikat',      'PM037',72.25,69.75,'IPA','R03'),
-(12,'Juara 1 FLS2N Cerpen',      6, 2.7,'2023-06-22 09:00:00','verified', 'Sertifikat,Rapor','PM038',87.50,85.00,'IPS','R02'),
-(17,'Juara 2 O2SN Panahan',      9, 4.3,'2023-06-22 10:00:00','accepted', 'Sertifikat,Rapor','PM039',81.75,79.25,'IPS','R01'),
-(20,'Juara 1 OSN Ekonomi',      10, 1.8,'2023-06-22 11:00:00','rejected', 'Sertifikat',      'PM040',67.50,65.00,'IPS','R03'),
-(25,'Juara 3 Karate Nasional',  13, 3.7,'2023-06-22 13:00:00','verified', 'Sertifikat,Rapor','PM041',84.00,81.50,'IPS','R02'),
-(30,'Juara 1 OSN Fisika',       15, 5.4,'2023-06-22 14:00:00','accepted', 'Sertifikat,Rapor','PM042',92.00,89.50,'IPA','R01'),
-(37,'Juara 2 FLS2N Desain',     19, 2.2,'2023-06-22 15:00:00','verified', 'Sertifikat,Rapor','PM043',85.75,83.25,'IPS','R03'),
-(44,'Juara 1 O2SN Catur',       22, 4.9,'2023-06-22 16:00:00','pending',  'Sertifikat',      'PM044',75.50,73.00,'IPS','R02'),
-(49,'Juara 3 OSN Komputer',     25, 1.6,'2023-06-22 17:00:00','rejected', 'Sertifikat',      'PM045',69.00,66.50,'IPA','R01'),
-(27,'Juara 1 Renang Provinsi',  14, 3.0,'2023-06-21 09:30:00','accepted', 'Sertifikat,Rapor','PM046',80.75,78.25,'IPS','R03'),
-(32,'Juara 2 OSN Geografi',     16, 5.8,'2023-06-21 10:30:00','verified', 'Sertifikat,Rapor','PM047',86.75,84.25,'IPS','R02'),
-(39,'Juara 1 FLS2N Teater',     20, 2.3,'2023-06-21 11:30:00','pending',  'Sertifikat',      'PM048',74.25,71.75,'IPS','R01'),
-(48,'Juara 3 O2SN Voli',        24, 4.5,'2023-06-21 13:30:00','accepted', 'Sertifikat,Rapor','PM049',82.25,79.75,'IPS','R03'),
-(34,'Juara 2 Silat Provinsi',   17, 1.9,'2023-06-21 14:30:00','verified', 'Sertifikat,Rapor','PM050',87.25,84.75,'IPS','R02');
-```
+(1, 'Prestasi siswa 1', 1,1.20,'2023-06-19 08:08:00','submitted','dok_prestasi_01.pdf','PM0001',85.50,82.00,'IPA','Ruang 1'),
+(2, 'Prestasi siswa 2', 2,2.10,'2023-06-19 08:18:00','submitted','dok_prestasi_02.pdf','PM0002',87.00,84.50,'IPS','Ruang 2'),
+(3, 'Prestasi siswa 3', 3,1.80,'2023-06-19 08:28:00','submitted','dok_prestasi_03.pdf','PM0003',90.25,88.00,'IPA','Ruang 3'),
+(4, 'Prestasi siswa 4', 4,3.40,'2023-06-19 08:38:00','submitted','dok_prestasi_04.pdf','PM0004',78.50,76.00,'IPS','Ruang 4'),
+(5, 'Prestasi siswa 5', 5,2.60,'2023-06-19 08:48:00','submitted','dok_prestasi_05.pdf','PM0005',88.75,86.50,'IPA','Ruang 5'),
+(6, 'Prestasi siswa 6', 6,1.50,'2023-06-19 08:58:00','submitted','dok_prestasi_06.pdf','PM0006',82.00,79.50,'IPS','Ruang 6'),
+(7, 'Prestasi siswa 7', 7,4.20,'2023-06-19 09:08:00','submitted','dok_prestasi_07.pdf','PM0007',91.50,89.00,'IPA','Ruang 7'),
+(8, 'Prestasi siswa 8', 8,3.10,'2023-06-19 09:18:00','submitted','dok_prestasi_08.pdf','PM0008',75.25,73.00,'IPS','Ruang 8'),
+(9, 'Prestasi siswa 9', 9,2.90,'2023-06-19 09:28:00','submitted','dok_prestasi_09.pdf','PM0009',86.00,83.50,'IPA','Ruang 9'),
+(10,'Prestasi siswa 10',10,1.70,'2023-06-19 09:38:00','submitted','dok_prestasi_10.pdf','PM0010',79.75,77.50,'IPS','Ruang 10'),
+(11,'Prestasi siswa 11',11,2.30,'2023-06-19 09:48:00','submitted','dok_prestasi_11.pdf','PM0011',93.00,90.50,'IPA','Ruang 1'),
+(12,'Prestasi siswa 12',12,4.50,'2023-06-19 09:58:00','submitted','dok_prestasi_12.pdf','PM0012',84.50,82.00,'IPS','Ruang 2'),
+(13,'Prestasi siswa 13',13,3.80,'2023-06-19 10:08:00','submitted','dok_prestasi_13.pdf','PM0013',88.25,85.75,'IPA','Ruang 3'),
+(14,'Prestasi siswa 14',14,1.40,'2023-06-19 10:18:00','submitted','dok_prestasi_14.pdf','PM0014',76.50,74.25,'IPS','Ruang 4'),
+(15,'Prestasi siswa 15',15,2.70,'2023-06-19 10:28:00','submitted','dok_prestasi_15.pdf','PM0015',89.75,87.25,'IPA','Ruang 5'),
+(16,'Prestasi siswa 16', 1,1.10,'2023-06-19 10:38:00','submitted','dok_prestasi_16.pdf','PM0016',83.00,80.50,'IPS','Ruang 6'),
+(17,'Prestasi siswa 17', 2,2.20,'2023-06-19 10:48:00','submitted','dok_prestasi_17.pdf','PM0017',92.25,89.75,'IPA','Ruang 7'),
+(18,'Prestasi siswa 18', 3,3.30,'2023-06-19 10:58:00','submitted','dok_prestasi_18.pdf','PM0018',77.50,75.25,'IPS','Ruang 8'),
+(19,'Prestasi siswa 19', 4,1.60,'2023-06-19 11:08:00','submitted','dok_prestasi_19.pdf','PM0019',87.75,85.25,'IPA','Ruang 9'),
+(20,'Prestasi siswa 20', 5,2.40,'2023-06-19 11:18:00','submitted','dok_prestasi_20.pdf','PM0020',81.25,78.75,'IPS','Ruang 10'),
+(21,'Prestasi siswa 21', 6,3.70,'2023-06-19 11:28:00','submitted','dok_prestasi_21.pdf','PM0021',90.50,88.00,'IPA','Ruang 1'),
+(22,'Prestasi siswa 22', 7,1.30,'2023-06-19 11:38:00','submitted','dok_prestasi_22.pdf','PM0022',85.75,83.25,'IPS','Ruang 2'),
+(23,'Prestasi siswa 23', 8,4.10,'2023-06-19 11:48:00','submitted','dok_prestasi_23.pdf','PM0023',78.00,75.50,'IPA','Ruang 3'),
+(24,'Prestasi siswa 24', 9,2.80,'2023-06-19 11:58:00','submitted','dok_prestasi_24.pdf','PM0024',94.25,91.75,'IPS','Ruang 4'),
+(25,'Prestasi siswa 25',10,1.90,'2023-06-19 12:08:00','submitted','dok_prestasi_25.pdf','PM0025',82.50,80.00,'IPA','Ruang 5'),
+(26,'Prestasi siswa 26',11,3.20,'2023-06-19 12:18:00','submitted','dok_prestasi_26.pdf','PM0026',88.00,85.50,'IPS','Ruang 6'),
+(27,'Prestasi siswa 27',12,2.50,'2023-06-19 12:28:00','submitted','dok_prestasi_27.pdf','PM0027',76.25,73.75,'IPA','Ruang 7'),
+(28,'Prestasi siswa 28',13,4.30,'2023-06-19 12:38:00','submitted','dok_prestasi_28.pdf','PM0028',91.75,89.25,'IPS','Ruang 8'),
+(29,'Prestasi siswa 29',14,1.80,'2023-06-19 12:48:00','submitted','dok_prestasi_29.pdf','PM0029',84.00,81.50,'IPA','Ruang 9'),
+(30,'Prestasi siswa 30',15,3.60,'2023-06-19 12:58:00','submitted','dok_prestasi_30.pdf','PM0030',79.50,77.00,'IPS','Ruang 10'),
+(31,'Prestasi siswa 31', 1,1.50,'2023-06-19 13:08:00','submitted','dok_prestasi_31.pdf','PM0031',86.75,84.25,'IPA','Ruang 1'),
+(32,'Prestasi siswa 32', 2,2.70,'2023-06-19 13:18:00','submitted','dok_prestasi_32.pdf','PM0032',92.00,89.50,'IPS','Ruang 2'),
+(33,'Prestasi siswa 33', 3,1.20,'2023-06-19 13:28:00','submitted','dok_prestasi_33.pdf','PM0033',80.25,77.75,'IPA','Ruang 3'),
+(34,'Prestasi siswa 34', 4,3.10,'2023-06-19 13:38:00','submitted','dok_prestasi_34.pdf','PM0034',87.50,85.00,'IPS','Ruang 4'),
+(35,'Prestasi siswa 35', 5,2.30,'2023-06-19 13:48:00','submitted','dok_prestasi_35.pdf','PM0035',83.75,81.25,'IPA','Ruang 5'),
+(36,'Prestasi siswa 36', 6,4.40,'2023-06-19 13:58:00','submitted','dok_prestasi_36.pdf','PM0036',89.00,86.50,'IPS','Ruang 6'),
+(37,'Prestasi siswa 37', 7,1.70,'2023-06-19 14:08:00','submitted','dok_prestasi_37.pdf','PM0037',75.50,73.00,'IPA','Ruang 7'),
+(38,'Prestasi siswa 38', 8,3.90,'2023-06-19 14:18:00','submitted','dok_prestasi_38.pdf','PM0038',93.25,90.75,'IPS','Ruang 8'),
+(39,'Prestasi siswa 39', 9,2.10,'2023-06-19 14:28:00','submitted','dok_prestasi_39.pdf','PM0039',81.50,79.00,'IPA','Ruang 9'),
+(40,'Prestasi siswa 40',10,1.40,'2023-06-19 14:38:00','submitted','dok_prestasi_40.pdf','PM0040',88.75,86.25,'IPS','Ruang 10'),
+(41,'Prestasi siswa 41',11,3.60,'2023-06-19 14:48:00','submitted','dok_prestasi_41.pdf','PM0041',77.25,74.75,'IPA','Ruang 1'),
+(42,'Prestasi siswa 42',12,2.80,'2023-06-19 14:58:00','submitted','dok_prestasi_42.pdf','PM0042',90.00,87.50,'IPS','Ruang 2'),
+(43,'Prestasi siswa 43',13,4.20,'2023-06-19 15:08:00','submitted','dok_prestasi_43.pdf','PM0043',84.25,81.75,'IPA','Ruang 3'),
+(44,'Prestasi siswa 44',14,1.60,'2023-06-19 15:18:00','submitted','dok_prestasi_44.pdf','PM0044',91.00,88.50,'IPS','Ruang 4'),
+(45,'Prestasi siswa 45',15,3.30,'2023-06-19 15:28:00','submitted','dok_prestasi_45.pdf','PM0045',78.75,76.25,'IPA','Ruang 5'),
+(46,'Prestasi siswa 46', 1,2.10,'2023-06-19 15:38:00','submitted','dok_prestasi_46.pdf','PM0046',85.00,82.50,'IPS','Ruang 6'),
+(47,'Prestasi siswa 47', 2,1.80,'2023-06-19 15:48:00','submitted','dok_prestasi_47.pdf','PM0047',87.25,84.75,'IPA','Ruang 7'),
+(48,'Prestasi siswa 48', 3,3.20,'2023-06-19 15:58:00','submitted','dok_prestasi_48.pdf','PM0048',82.75,80.25,'IPS','Ruang 8'),
+(49,'Prestasi siswa 49', 4,2.50,'2023-06-19 16:08:00','submitted','dok_prestasi_49.pdf','PM0049',89.50,87.00,'IPA','Ruang 9'),
+(50,'Prestasi siswa 50', 5,1.40,'2023-06-19 16:18:00','submitted','dok_prestasi_50.pdf','PM0050',76.75,74.25,'IPS','Ruang 10'),
+(51,'Prestasi siswa 51', 6,4.10,'2023-06-19 16:28:00','submitted','dok_prestasi_51.pdf','PM0051',93.50,91.00,'IPA','Ruang 1'),
+(52,'Prestasi siswa 52', 7,2.90,'2023-06-19 16:38:00','submitted','dok_prestasi_52.pdf','PM0052',80.50,78.00,'IPS','Ruang 2'),
+(53,'Prestasi siswa 53', 8,3.70,'2023-06-19 16:48:00','submitted','dok_prestasi_53.pdf','PM0053',88.00,85.50,'IPA','Ruang 3'),
+(54,'Prestasi siswa 54', 9,1.20,'2023-06-19 16:58:00','submitted','dok_prestasi_54.pdf','PM0054',83.25,80.75,'IPS','Ruang 4'),
+(55,'Prestasi siswa 55',10,2.60,'2023-06-19 17:08:00','submitted','dok_prestasi_55.pdf','PM0055',90.75,88.25,'IPA','Ruang 5'),
+(56,'Prestasi siswa 56',11,3.40,'2023-06-19 17:18:00','submitted','dok_prestasi_56.pdf','PM0056',77.00,74.50,'IPS','Ruang 6'),
+(57,'Prestasi siswa 57',12,1.90,'2023-06-19 17:28:00','submitted','dok_prestasi_57.pdf','PM0057',91.25,88.75,'IPA','Ruang 7'),
+(58,'Prestasi siswa 58',13,4.30,'2023-06-19 17:38:00','submitted','dok_prestasi_58.pdf','PM0058',85.50,83.00,'IPS','Ruang 8'),
+(59,'Prestasi siswa 59',14,2.10,'2023-06-19 17:48:00','submitted','dok_prestasi_59.pdf','PM0059',79.25,76.75,'IPA','Ruang 9'),
+(60,'Prestasi siswa 60',15,3.50,'2023-06-19 17:58:00','submitted','dok_prestasi_60.pdf','PM0060',86.50,84.00,'IPS','Ruang 10');
 
-### 2.2.4 Insert Registrations Zonasi
-
-```sql
--- Registrations Zonasi (50 data)
+-- ============================================================
+-- REGISTRATIONS_ZONASI (60 data)
+-- ============================================================
 INSERT INTO registrations_zonasi (
-    user_id, school_destination_id,
-    distance, verification_schedule, status, documents, kk_date
+    user_id, school_destination_id, distance,
+    verification_schedule, status, documents, kk_date
 ) VALUES
-( 1,  1, 0.5,'2023-06-21 08:00:00','accepted','KK,KTP Ortu','2020-01-15'),
-( 5,  3, 1.2,'2023-06-21 09:00:00','accepted','KK,KTP Ortu','2019-05-20'),
-( 8,  4, 0.8,'2023-06-21 10:00:00','verified', 'KK,KTP Ortu','2021-03-10'),
-(10,  5, 2.1,'2023-06-21 11:00:00','accepted','KK,KTP Ortu','2018-11-25'),
-(12,  6, 0.3,'2023-06-21 13:00:00','rejected', 'KK',         '2022-07-08'),
-(16,  8, 1.7,'2023-06-21 14:00:00','accepted','KK,KTP Ortu','2019-09-14'),
-(19, 10, 0.6,'2023-06-21 15:00:00','verified', 'KK,KTP Ortu','2020-04-30'),
-(21, 11, 2.4,'2023-06-21 16:00:00','accepted','KK,KTP Ortu','2018-12-01'),
-(24, 12, 0.9,'2023-06-22 08:00:00','verified', 'KK,KTP Ortu','2021-06-17'),
-(26, 13, 1.5,'2023-06-22 09:00:00','accepted','KK,KTP Ortu','2019-02-28'),
-(28, 14, 0.4,'2023-06-22 10:00:00','rejected', 'KK',         '2022-08-22'),
-(31, 16, 1.1,'2023-06-22 11:00:00','accepted','KK,KTP Ortu','2020-10-05'),
-(34, 17, 2.8,'2023-06-22 13:00:00','verified', 'KK,KTP Ortu','2018-03-19'),
-(37, 19, 0.7,'2023-06-22 14:00:00','accepted','KK,KTP Ortu','2021-01-11'),
-(40, 20, 1.9,'2023-06-22 15:00:00','verified', 'KK,KTP Ortu','2019-07-23'),
-(42, 21, 0.2,'2023-06-22 16:00:00','accepted','KK,KTP Ortu','2020-05-07'),
-(45, 23, 2.6,'2023-06-22 17:00:00','rejected', 'KK',         '2022-09-16'),
-(48, 24, 0.8,'2023-06-21 08:30:00','accepted','KK,KTP Ortu','2018-06-29'),
-(49, 25, 1.3,'2023-06-21 09:30:00','verified', 'KK,KTP Ortu','2021-11-04'),
-( 2,  1, 0.6,'2023-06-21 10:30:00','accepted','KK,KTP Ortu','2019-08-13'),
-( 3,  2, 1.8,'2023-06-21 11:30:00','verified', 'KK,KTP Ortu','2020-02-27'),
-( 4,  2, 0.4,'2023-06-21 13:30:00','rejected', 'KK',         '2022-04-08'),
-( 6,  3, 2.3,'2023-06-21 14:30:00','accepted','KK,KTP Ortu','2018-10-31'),
-( 7,  4, 0.7,'2023-06-21 15:30:00','verified', 'KK,KTP Ortu','2021-07-20'),
-( 9,  5, 1.4,'2023-06-22 08:30:00','accepted','KK,KTP Ortu','2019-03-15'),
-(11,  6, 0.3,'2023-06-22 09:30:00','verified', 'KK,KTP Ortu','2020-09-08'),
-(13,  7, 2.1,'2023-06-22 10:30:00','accepted','KK,KTP Ortu','2018-01-24'),
-(14,  7, 0.9,'2023-06-22 11:30:00','rejected', 'KK',         '2022-06-11'),
-(15,  8, 1.6,'2023-06-22 13:30:00','accepted','KK,KTP Ortu','2019-12-03'),
-(17,  9, 0.5,'2023-06-22 14:30:00','verified', 'KK,KTP Ortu','2021-04-26'),
-(18,  9, 2.7,'2023-06-22 15:30:00','accepted','KK,KTP Ortu','2018-08-18'),
-(20, 10, 0.8,'2023-06-22 16:30:00','verified', 'KK,KTP Ortu','2020-07-09'),
-(22, 11, 1.2,'2023-06-21 09:00:00','accepted','KK,KTP Ortu','2019-05-01'),
-(23, 12, 0.4,'2023-06-21 10:00:00','rejected', 'KK',         '2022-11-27'),
-(25, 13, 2.5,'2023-06-21 11:00:00','accepted','KK,KTP Ortu','2018-04-14'),
-(27, 14, 0.6,'2023-06-21 13:00:00','verified', 'KK,KTP Ortu','2021-09-30'),
-(29, 15, 1.9,'2023-06-21 14:00:00','accepted','KK,KTP Ortu','2019-01-17'),
-(30, 15, 0.3,'2023-06-21 15:00:00','verified', 'KK,KTP Ortu','2020-06-22'),
-(32, 16, 2.2,'2023-06-22 09:00:00','accepted','KK,KTP Ortu','2018-07-05'),
-(33, 17, 0.7,'2023-06-22 10:00:00','rejected', 'KK',         '2022-03-18'),
-(35, 18, 1.5,'2023-06-22 11:00:00','accepted','KK,KTP Ortu','2019-11-10'),
-(36, 18, 0.5,'2023-06-22 13:00:00','verified', 'KK,KTP Ortu','2021-02-14'),
-(38, 19, 2.0,'2023-06-22 14:00:00','accepted','KK,KTP Ortu','2018-09-27'),
-(39, 20, 0.8,'2023-06-22 15:00:00','verified', 'KK,KTP Ortu','2020-12-19'),
-(41, 21, 1.3,'2023-06-22 16:00:00','accepted','KK,KTP Ortu','2019-06-06'),
-(43, 22, 0.4,'2023-06-21 09:30:00','rejected', 'KK',         '2022-10-23'),
-(44, 22, 2.6,'2023-06-21 10:30:00','accepted','KK,KTP Ortu','2018-02-08'),
-(46, 23, 0.9,'2023-06-21 11:30:00','verified', 'KK,KTP Ortu','2021-08-21'),
-(47, 24, 1.7,'2023-06-21 13:30:00','accepted','KK,KTP Ortu','2019-04-12'),
-(50, 25, 0.3,'2023-06-21 14:30:00','verified', 'KK,KTP Ortu','2020-11-25');
+(1,  1, 1.20,'2023-06-19 08:12:00','submitted','dok_zonasi_01.pdf','2020-01-10'),
+(2,  2, 2.10,'2023-06-19 08:22:00','submitted','dok_zonasi_02.pdf','2020-02-15'),
+(3,  3, 1.80,'2023-06-19 08:32:00','submitted','dok_zonasi_03.pdf','2020-03-20'),
+(4,  4, 3.40,'2023-06-19 08:42:00','submitted','dok_zonasi_04.pdf','2020-04-25'),
+(5,  5, 2.60,'2023-06-19 08:52:00','submitted','dok_zonasi_05.pdf','2020-05-30'),
+(6,  6, 1.50,'2023-06-19 09:02:00','submitted','dok_zonasi_06.pdf','2020-06-05'),
+(7,  7, 4.20,'2023-06-19 09:12:00','submitted','dok_zonasi_07.pdf','2020-07-10'),
+(8,  8, 3.10,'2023-06-19 09:22:00','submitted','dok_zonasi_08.pdf','2020-08-15'),
+(9,  9, 2.90,'2023-06-19 09:32:00','submitted','dok_zonasi_09.pdf','2020-09-20'),
+(10,10, 1.70,'2023-06-19 09:42:00','submitted','dok_zonasi_10.pdf','2020-10-25'),
+(11,11, 2.30,'2023-06-19 09:52:00','submitted','dok_zonasi_11.pdf','2020-11-30'),
+(12,12, 4.50,'2023-06-19 10:02:00','submitted','dok_zonasi_12.pdf','2020-12-05'),
+(13,13, 3.80,'2023-06-19 10:12:00','submitted','dok_zonasi_13.pdf','2021-01-10'),
+(14,14, 1.40,'2023-06-19 10:22:00','submitted','dok_zonasi_14.pdf','2021-02-15'),
+(15,15, 2.70,'2023-06-19 10:32:00','submitted','dok_zonasi_15.pdf','2021-03-20'),
+(16, 1, 1.10,'2023-06-19 10:42:00','submitted','dok_zonasi_16.pdf','2021-04-25'),
+(17, 2, 2.20,'2023-06-19 10:52:00','submitted','dok_zonasi_17.pdf','2021-05-30'),
+(18, 3, 3.30,'2023-06-19 11:02:00','submitted','dok_zonasi_18.pdf','2021-06-05'),
+(19, 4, 1.60,'2023-06-19 11:12:00','submitted','dok_zonasi_19.pdf','2021-07-10'),
+(20, 5, 2.40,'2023-06-19 11:22:00','submitted','dok_zonasi_20.pdf','2021-08-15'),
+(21, 6, 3.70,'2023-06-19 11:32:00','submitted','dok_zonasi_21.pdf','2021-09-20'),
+(22, 7, 1.30,'2023-06-19 11:42:00','submitted','dok_zonasi_22.pdf','2021-10-25'),
+(23, 8, 4.10,'2023-06-19 11:52:00','submitted','dok_zonasi_23.pdf','2021-11-30'),
+(24, 9, 2.80,'2023-06-19 12:02:00','submitted','dok_zonasi_24.pdf','2021-12-05'),
+(25,10, 1.90,'2023-06-19 12:12:00','submitted','dok_zonasi_25.pdf','2022-01-10'),
+(26,11, 3.20,'2023-06-19 12:22:00','submitted','dok_zonasi_26.pdf','2022-02-15'),
+(27,12, 2.50,'2023-06-19 12:32:00','submitted','dok_zonasi_27.pdf','2022-03-20'),
+(28,13, 4.30,'2023-06-19 12:42:00','submitted','dok_zonasi_28.pdf','2022-04-25'),
+(29,14, 1.80,'2023-06-19 12:52:00','submitted','dok_zonasi_29.pdf','2022-05-30'),
+(30,15, 3.60,'2023-06-19 13:02:00','submitted','dok_zonasi_30.pdf','2022-06-05'),
+(31, 1, 1.50,'2023-06-19 13:12:00','submitted','dok_zonasi_31.pdf','2022-07-10'),
+(32, 2, 2.70,'2023-06-19 13:22:00','submitted','dok_zonasi_32.pdf','2022-08-15'),
+(33, 3, 1.20,'2023-06-19 13:32:00','submitted','dok_zonasi_33.pdf','2022-09-20'),
+(34, 4, 3.10,'2023-06-19 13:42:00','submitted','dok_zonasi_34.pdf','2022-10-25'),
+(35, 5, 2.30,'2023-06-19 13:52:00','submitted','dok_zonasi_35.pdf','2022-11-30'),
+(36, 6, 4.40,'2023-06-19 14:02:00','submitted','dok_zonasi_36.pdf','2022-12-05'),
+(37, 7, 1.70,'2023-06-19 14:12:00','submitted','dok_zonasi_37.pdf','2023-01-10'),
+(38, 8, 3.90,'2023-06-19 14:22:00','submitted','dok_zonasi_38.pdf','2023-02-15'),
+(39, 9, 2.10,'2023-06-19 14:32:00','submitted','dok_zonasi_39.pdf','2023-03-20'),
+(40,10, 1.40,'2023-06-19 14:42:00','submitted','dok_zonasi_40.pdf','2023-04-25'),
+(41,11, 3.60,'2023-06-19 14:52:00','submitted','dok_zonasi_41.pdf','2023-05-01'),
+(42,12, 2.80,'2023-06-19 15:02:00','submitted','dok_zonasi_42.pdf','2023-05-05'),
+(43,13, 4.20,'2023-06-19 15:12:00','submitted','dok_zonasi_43.pdf','2023-05-10'),
+(44,14, 1.60,'2023-06-19 15:22:00','submitted','dok_zonasi_44.pdf','2023-05-15'),
+(45,15, 3.30,'2023-06-19 15:32:00','submitted','dok_zonasi_45.pdf','2023-05-20'),
+(46, 1, 2.10,'2023-06-19 15:42:00','submitted','dok_zonasi_46.pdf','2023-05-25'),
+(47, 1, 1.80,'2023-06-19 15:52:00','submitted','dok_zonasi_47.pdf','2023-05-28'),
+(48, 1, 3.20,'2023-06-19 16:02:00','submitted','dok_zonasi_48.pdf','2023-06-01'),
+(49, 2, 2.50,'2023-06-19 16:12:00','submitted','dok_zonasi_49.pdf','2023-06-03'),
+(50, 2, 1.40,'2023-06-19 16:22:00','submitted','dok_zonasi_50.pdf','2023-06-05'),
+(51, 1, 4.10,'2023-06-19 16:32:00','submitted','dok_zonasi_51.pdf','2023-06-07'),
+(52, 1, 2.90,'2023-06-19 16:42:00','submitted','dok_zonasi_52.pdf','2023-06-09'),
+(53, 2, 3.70,'2023-06-19 16:52:00','submitted','dok_zonasi_53.pdf','2023-06-11'),
+(54, 2, 1.20,'2023-06-19 17:02:00','submitted','dok_zonasi_54.pdf','2023-06-13'),
+(55, 1, 2.60,'2023-06-19 17:12:00','submitted','dok_zonasi_55.pdf','2023-06-15'),
+(56, 1, 3.40,'2023-06-19 17:22:00','submitted','dok_zonasi_56.pdf','2023-06-16'),
+(57, 2, 1.90,'2023-06-19 17:32:00','submitted','dok_zonasi_57.pdf','2023-06-17'),
+(58, 2, 4.30,'2023-06-19 17:42:00','submitted','dok_zonasi_58.pdf','2023-06-18'),
+(59, 1, 2.10,'2023-06-19 17:52:00','submitted','dok_zonasi_59.pdf','2023-06-19'),
+(60, 2, 3.50,'2023-06-19 18:02:00','submitted','dok_zonasi_60.pdf','2023-06-19');
 ```
 
 ---
 
-## 2.3 Data Dummy - Kelompok C (Verifikasi)
+## STEP 5: Insert VERIFIKASI — Campuran Approved dan Rejected
 
 ```sql
 -- ============================================================
--- KELOMPOK C: VERIFIKASI
+-- VERIFICATION_AFIRMASI (60 data)
+-- Kerusakan: 
+--   id 1-40  : 'approved'  → akan ada penerimaan
+--   id 41-50 : 'approved'  → TIDAK akan ada penerimaan (rusak!)
+--   id 51-60 : 'rejected'  → TAPI akan tetap dibuat penerimaan (rusak!)
 -- ============================================================
+INSERT INTO verification_afirmasi (
+    registration_id, operator_id, action, alasan_batal
+) VALUES
+-- NORMAL: approved (id 1-40)
+(1, 1,'approved',NULL),(2, 2,'approved',NULL),(3, 3,'approved',NULL),
+(4, 4,'approved',NULL),(5, 5,'approved',NULL),(6, 6,'approved',NULL),
+(7, 7,'approved',NULL),(8, 8,'approved',NULL),(9, 9,'approved',NULL),
+(10,10,'approved',NULL),(11,11,'approved',NULL),(12,12,'approved',NULL),
+(13,13,'approved',NULL),(14,14,'approved',NULL),(15,15,'approved',NULL),
+(16,16,'approved',NULL),(17,17,'approved',NULL),(18,18,'approved',NULL),
+(19,19,'approved',NULL),(20,20,'approved',NULL),(21,21,'approved',NULL),
+(22,22,'approved',NULL),(23,23,'approved',NULL),(24,24,'approved',NULL),
+(25,25,'approved',NULL),(26,26,'approved',NULL),(27,27,'approved',NULL),
+(28,28,'approved',NULL),(29,29,'approved',NULL),(30,30,'approved',NULL),
+(31,31,'approved',NULL),(32,32,'approved',NULL),(33,33,'approved',NULL),
+(34,34,'approved',NULL),(35,35,'approved',NULL),(36,36,'approved',NULL),
+(37,37,'approved',NULL),(38,38,'approved',NULL),(39,39,'approved',NULL),
+(40,40,'approved',NULL),
+-- RUSAK: approved tapi TIDAK akan ada penerimaan (id 41-50)
+(41,41,'approved',NULL),(42,42,'approved',NULL),(43,43,'approved',NULL),
+(44,44,'approved',NULL),(45,45,'approved',NULL),(46,46,'approved',NULL),
+(47,47,'approved',NULL),(48,48,'approved',NULL),(49,49,'approved',NULL),
+(50,50,'approved',NULL),
+-- RUSAK: rejected tapi AKAN ada penerimaan (id 51-60)
+(51,51,'rejected','Dokumen KIP tidak valid'),
+(52,52,'rejected','Dokumen tidak lengkap'),
+(53,53,'rejected','NISN tidak ditemukan'),
+(54,54,'rejected','Foto tidak jelas'),
+(55,55,'rejected','Tanda tangan tidak sah'),
+(56,56,'rejected','Dokumen KIP kadaluarsa'),
+(57,57,'rejected','Alamat tidak sesuai KK'),
+(58,58,'rejected','Dokumen tidak asli'),
+(59,59,'rejected','Data tidak konsisten'),
+(60,60,'rejected','Berkas tidak lengkap');
 
--- Verification Afirmasi (50 data)
-INSERT INTO verification_afirmasi
-    (registration_id, operator_id, action, alasan_batal)
-VALUES
-( 1,  3,'approve', NULL),
-( 2,  5,'approve', NULL),
-( 3,  8,'reject',  'Dokumen tidak lengkap'),
-( 4,  3,'approve', NULL),
-( 5,  5,'approve', NULL),
-( 6,  8,'approve', NULL),
-( 7,  3,'approve', NULL),
-( 8,  5,'reject',  'Data tidak sesuai'),
-( 9,  8,'approve', NULL),
-(10,  3,'approve', NULL),
-(11,  5,'approve', NULL),
-(12,  8,'approve', NULL),
-(13,  3,'approve', NULL),
-(14,  5,'approve', NULL),
-(15,  8,'reject',  'Dokumen palsu'),
-(16,  3,'pending', NULL),
-(17,  5,'pending', NULL),
-(18,  8,'approve', NULL),
-(19,  3,'approve', NULL),
-(20,  5,'approve', NULL),
-(21,  8,'approve', NULL),
-(22,  3,'reject',  'Tidak memenuhi syarat'),
-(23,  5,'approve', NULL),
-(24,  8,'approve', NULL),
-(25,  3,'approve', NULL),
-(26,  5,'approve', NULL),
-(27,  8,'reject',  'Dokumen tidak lengkap'),
-(28,  3,'approve', NULL),
-(29,  5,'approve', NULL),
-(30,  8,'approve', NULL),
-(31,  3,'pending', NULL),
-(32,  5,'approve', NULL),
-(33,  8,'approve', NULL),
-(34,  3,'approve', NULL),
-(35,  5,'reject',  'Data tidak valid'),
-(36,  8,'approve', NULL),
-(37,  3,'approve', NULL),
-(38,  5,'approve', NULL),
-(39,  8,'approve', NULL),
-(40,  3,'approve', NULL),
-(41,  5,'reject',  'Dokumen tidak lengkap'),
-(42,  8,'approve', NULL),
-(43,  3,'approve', NULL),
-(44,  5,'approve', NULL),
-(45,  8,'reject',  'Tidak memenuhi syarat'),
-(46,  3,'approve', NULL),
-(47,  5,'approve', NULL),
-(48,  8,'approve', NULL),
-(49,  3,'approve', NULL),
-(50,  5,'approve', NULL);
+-- ============================================================
+-- VERIFICATION_MUTASI (60 data)
+-- Kerusakan serupa dengan afirmasi
+-- ============================================================
+INSERT INTO verification_mutasi (
+    registration_id, operator_id, action, alasan_batal
+) VALUES
+(1, 1,'approved',NULL),(2, 2,'approved',NULL),(3, 3,'approved',NULL),
+(4, 4,'approved',NULL),(5, 5,'approved',NULL),(6, 6,'approved',NULL),
+(7, 7,'approved',NULL),(8, 8,'approved',NULL),(9, 9,'approved',NULL),
+(10,10,'approved',NULL),(11,11,'approved',NULL),(12,12,'approved',NULL),
+(13,13,'approved',NULL),(14,14,'approved',NULL),(15,15,'approved',NULL),
+(16,16,'approved',NULL),(17,17,'approved',NULL),(18,18,'approved',NULL),
+(19,19,'approved',NULL),(20,20,'approved',NULL),(21,21,'approved',NULL),
+(22,22,'approved',NULL),(23,23,'approved',NULL),(24,24,'approved',NULL),
+(25,25,'approved',NULL),(26,26,'approved',NULL),(27,27,'approved',NULL),
+(28,28,'approved',NULL),(29,29,'approved',NULL),(30,30,'approved',NULL),
+(31,31,'approved',NULL),(32,32,'approved',NULL),(33,33,'approved',NULL),
+(34,34,'approved',NULL),(35,35,'approved',NULL),(36,36,'approved',NULL),
+(37,37,'approved',NULL),(38,38,'approved',NULL),(39,39,'approved',NULL),
+(40,40,'approved',NULL),
+-- RUSAK: approved tapi tidak ada penerimaan
+(41,41,'approved',NULL),(42,42,'approved',NULL),(43,43,'approved',NULL),
+(44,44,'approved',NULL),(45,45,'approved',NULL),(46,46,'approved',NULL),
+(47,47,'approved',NULL),(48,48,'approved',NULL),(49,49,'approved',NULL),
+(50,50,'approved',NULL),
+-- RUSAK: rejected tapi akan ada penerimaan
+(51,51,'rejected','Surat tugas tidak valid'),
+(52,52,'rejected','Instansi tidak dikenal'),
+(53,53,'rejected','Periode tugas tidak sesuai'),
+(54,54,'rejected','Tanda tangan pejabat palsu'),
+(55,55,'rejected','Dokumen expired'),
+(56,56,'rejected','Tidak ada legalisir'),
+(57,57,'rejected','Format surat salah'),
+(58,58,'rejected','Cap instansi tidak ada'),
+(59,59,'rejected','Nama tidak sesuai KTP'),
+(60,60,'rejected','Dokumen tidak bisa dibuka');
 
--- Verification Mutasi (50 data)
-INSERT INTO verification_mutasi
-    (registration_id, operator_id, action, alasan_batal)
-VALUES
-( 1, 15,'approve', NULL),
-( 2, 20,'approve', NULL),
-( 3, 28,'reject',  'SK Mutasi tidak valid'),
-( 4, 15,'approve', NULL),
-( 5, 20,'approve', NULL),
-( 6, 28,'approve', NULL),
-( 7, 15,'pending', NULL),
-( 8, 20,'approve', NULL),
-( 9, 28,'approve', NULL),
-(10, 15,'approve', NULL),
-(11, 20,'reject',  'Dokumen tidak lengkap'),
-(12, 28,'approve', NULL),
-(13, 15,'approve', NULL),
-(14, 20,'pending', NULL),
-(15, 28,'approve', NULL),
-(16, 15,'approve', NULL),
-(17, 20,'approve', NULL),
-(18, 28,'reject',  'SK tidak sesuai'),
-(19, 15,'approve', NULL),
-(20, 20,'approve', NULL),
-(21, 28,'approve', NULL),
-(22, 15,'approve', NULL),
-(23, 20,'approve', NULL),
-(24, 28,'approve', NULL),
-(25, 15,'approve', NULL),
-(26, 20,'reject',  'Alamat tidak sesuai'),
-(27, 28,'approve', NULL),
-(28, 15,'approve', NULL),
-(29, 20,'approve', NULL),
-(30, 28,'approve', NULL),
-(31, 15,'approve', NULL),
-(32, 20,'approve', NULL),
-(33, 28,'reject',  'Dokumen tidak lengkap'),
-(34, 15,'approve', NULL),
-(35, 20,'approve', NULL),
-(36, 28,'approve', NULL),
-(37, 15,'approve', NULL),
-(38, 20,'approve', NULL),
-(39, 28,'pending', NULL),
-(40, 15,'approve', NULL),
-(41, 20,'approve', NULL),
-(42, 28,'approve', NULL),
-(43, 15,'pending', NULL),
-(44, 20,'approve', NULL),
-(45, 28,'approve', NULL),
-(46, 15,'approve', NULL),
-(47, 20,'approve', NULL),
-(48, 28,'reject',  'Tidak memenuhi syarat'),
-(49, 15,'approve', NULL),
-(50, 20,'approve', NULL);
+-- ============================================================
+-- VERIFICATION_PRESTASI_MANDIRI (60 data)
+-- ============================================================
+INSERT INTO verification_prestasi_mandiri (
+    registration_id, operator_id, action, alasan_batal
+) VALUES
+(1, 1,'approved',NULL),(2, 2,'approved',NULL),(3, 3,'approved',NULL),
+(4, 4,'approved',NULL),(5, 5,'approved',NULL),(6, 6,'approved',NULL),
+(7, 7,'approved',NULL),(8, 8,'approved',NULL),(9, 9,'approved',NULL),
+(10,10,'approved',NULL),(11,11,'approved',NULL),(12,12,'approved',NULL),
+(13,13,'approved',NULL),(14,14,'approved',NULL),(15,15,'approved',NULL),
+(16,16,'approved',NULL),(17,17,'approved',NULL),(18,18,'approved',NULL),
+(19,19,'approved',NULL),(20,20,'approved',NULL),(21,21,'approved',NULL),
+(22,22,'approved',NULL),(23,23,'approved',NULL),(24,24,'approved',NULL),
+(25,25,'approved',NULL),(26,26,'approved',NULL),(27,27,'approved',NULL),
+(28,28,'approved',NULL),(29,29,'approved',NULL),(30,30,'approved',NULL),
+(31,31,'approved',NULL),(32,32,'approved',NULL),(33,33,'approved',NULL),
+(34,34,'approved',NULL),(35,35,'approved',NULL),(36,36,'approved',NULL),
+(37,37,'approved',NULL),(38,38,'approved',NULL),(39,39,'approved',NULL),
+(40,40,'approved',NULL),
+(41,41,'approved',NULL),(42,42,'approved',NULL),(43,43,'approved',NULL),
+(44,44,'approved',NULL),(45,45,'approved',NULL),(46,46,'approved',NULL),
+(47,47,'approved',NULL),(48,48,'approved',NULL),(49,49,'approved',NULL),
+(50,50,'approved',NULL),
+(51,51,'rejected','Nilai tidak memenuhi minimum'),
+(52,52,'rejected','Piagam tidak terverifikasi'),
+(53,53,'rejected','Tingkat kejuaraan tidak sesuai'),
+(54,54,'rejected','Tahun kejuaraan terlalu lama'),
+(55,55,'rejected','Nama kejuaraan tidak valid'),
+(56,56,'rejected','Scan piagam tidak jelas'),
+(57,57,'rejected','Cabang lomba tidak sesuai jurusan'),
+(58,58,'rejected','Lembaga penyelenggara tidak diakui'),
+(59,59,'rejected','Piagam tidak ditandatangani'),
+(60,60,'rejected','Data piagam tidak konsisten');
 
--- Verification Prestasi Mandiri (50 data)
-INSERT INTO verification_prestasi_mandiri
-    (registration_id, operator_id, action, alasan_batal)
-VALUES
-( 1, 36,'approve', NULL),
-( 2, 41,'approve', NULL),
-( 3, 36,'reject',  'Sertifikat tidak valid'),
-( 4, 41,'approve', NULL),
-( 5, 36,'approve', NULL),
-( 6, 41,'approve', NULL),
-( 7, 36,'approve', NULL),
-( 8, 41,'pending', NULL),
-( 9, 36,'approve', NULL),
-(10, 41,'approve', NULL),
-(11, 36,'approve', NULL),
-(12, 41,'approve', NULL),
-(13, 36,'reject',  'Nilai tidak memenuhi'),
-(14, 41,'approve', NULL),
-(15, 36,'approve', NULL),
-(16, 41,'approve', NULL),
-(17, 36,'pending', NULL),
-(18, 41,'approve', NULL),
-(19, 36,'approve', NULL),
-(20, 41,'approve', NULL),
-(21, 36,'reject',  'Sertifikat palsu'),
-(22, 41,'approve', NULL),
-(23, 36,'approve', NULL),
-(24, 41,'pending', NULL),
-(25, 36,'approve', NULL),
-(26, 41,'approve', NULL),
-(27, 36,'reject',  'Dokumen tidak lengkap'),
-(28, 41,'approve', NULL),
-(29, 36,'approve', NULL),
-(30, 41,'approve', NULL),
-(31, 36,'pending', NULL),
-(32, 41,'approve', NULL),
-(33, 36,'approve', NULL),
-(34, 41,'reject',  'Tidak memenuhi syarat'),
-(35, 36,'approve', NULL),
-(36, 41,'approve', NULL),
-(37, 36,'pending', NULL),
-(38, 41,'approve', NULL),
-(39, 36,'approve', NULL),
-(40, 41,'reject',  'Nilai tidak memenuhi'),
-(41, 36,'approve', NULL),
-(42, 41,'approve', NULL),
-(43, 36,'approve', NULL),
-(44, 41,'pending', NULL),
-(45, 36,'reject',  'Sertifikat tidak valid'),
-(46, 41,'approve', NULL),
-(47, 36,'approve', NULL),
-(48, 41,'pending', NULL),
-(49, 36,'approve', NULL),
-(50, 41,'approve', NULL);
-
--- Verification Zonasi (50 data)
-INSERT INTO verification_zonasi
-    (registration_id, operator_id, action, alasan_batal)
-VALUES
-( 1,  3,'approve', NULL),
-( 2,  5,'approve', NULL),
-( 3,  8,'approve', NULL),
-( 4,  3,'reject',  'Jarak melebihi batas zonasi'),
-( 5,  5,'approve', NULL),
-( 6,  8,'approve', NULL),
-( 7,  3,'approve', NULL),
-( 8,  5,'approve', NULL),
-( 9,  8,'approve', NULL),
-(10,  3,'approve', NULL),
-(11,  5,'reject',  'KK tidak sesuai'),
-(12,  8,'approve', NULL),
-(13,  3,'approve', NULL),
-(14,  5,'approve', NULL),
-(15,  8,'approve', NULL),
-(16,  3,'approve', NULL),
-(17,  5,'approve', NULL),
-(18,  8,'approve', NULL),
-(19,  3,'approve', NULL),
-(20,  5,'approve', NULL),
-(21,  8,'approve', NULL),
-(22,  3,'reject',  'Jarak melebihi batas'),
-(23,  5,'approve', NULL),
-(24,  8,'reject',  'Dokumen tidak lengkap'),
-(25,  3,'approve', NULL),
-(26,  5,'approve', NULL),
-(27,  8,'approve', NULL),
-(28,  3,'approve', NULL),
-(29,  5,'approve', NULL),
-(30,  8,'approve', NULL),
-(31,  3,'approve', NULL),
-(32,  5,'approve', NULL),
-(33,  8,'reject',  'KK tidak valid'),
-(34,  3,'approve', NULL),
-(35,  5,'approve', NULL),
-(36,  8,'approve', NULL),
-(37,  3,'approve', NULL),
-(38,  5,'approve', NULL),
-(39,  8,'approve', NULL),
-(40,  3,'approve', NULL),
-(41,  5,'approve', NULL),
-(42,  8,'approve', NULL),
-(43,  3,'reject',  'Jarak melebihi batas zonasi'),
-(44,  5,'approve', NULL),
-(45,  8,'approve', NULL),
-(46,  3,'approve', NULL),
-(47,  5,'approve', NULL),
-(48,  8,'approve', NULL),
-(49,  3,'approve', NULL),
-(50,  5,'approve', NULL);
+-- ============================================================
+-- VERIFICATION_ZONASI (60 data)
+-- ============================================================
+INSERT INTO verification_zonasi (
+    registration_id, operator_id, action, alasan_batal
+) VALUES
+(1, 1,'approved',NULL),(2, 2,'approved',NULL),(3, 3,'approved',NULL),
+(4, 4,'approved',NULL),(5, 5,'approved',NULL),(6, 6,'approved',NULL),
+(7, 7,'approved',NULL),(8, 8,'approved',NULL),(9, 9,'approved',NULL),
+(10,10,'approved',NULL),(11,11,'approved',NULL),(12,12,'approved',NULL),
+(13,13,'approved',NULL),(14,14,'approved',NULL),(15,15,'approved',NULL),
+(16,16,'approved',NULL),(17,17,'approved',NULL),(18,18,'approved',NULL),
+(19,19,'approved',NULL),(20,20,'approved',NULL),(21,21,'approved',NULL),
+(22,22,'approved',NULL),(23,23,'approved',NULL),(24,24,'approved',NULL),
+(25,25,'approved',NULL),(26,26,'approved',NULL),(27,27,'approved',NULL),
+(28,28,'approved',NULL),(29,29,'approved',NULL),(30,30,'approved',NULL),
+(31,31,'approved',NULL),(32,32,'approved',NULL),(33,33,'approved',NULL),
+(34,34,'approved',NULL),(35,35,'approved',NULL),(36,36,'approved',NULL),
+(37,37,'approved',NULL),(38,38,'approved',NULL),(39,39,'approved',NULL),
+(40,40,'approved',NULL),
+(41,41,'approved',NULL),(42,42,'approved',NULL),(43,43,'approved',NULL),
+(44,44,'approved',NULL),(45,45,'approved',NULL),(46,46,'approved',NULL),
+(47,47,'approved',NULL),(48,48,'approved',NULL),(49,49,'approved',NULL),
+(50,50,'approved',NULL),
+(51,51,'rejected','Jarak melebihi radius zonasi'),
+(52,52,'rejected','KK baru dibuat < 1 tahun'),
+(53,53,'rejected','Alamat KK tidak sesuai'),
+(54,54,'rejected','KK tidak bisa diverifikasi'),
+(55,55,'rejected','Daerah bukan zonasi sekolah ini'),
+(56,56,'rejected','KK expired'),
+(57,57,'rejected','Nama di KK berbeda dengan ijazah'),
+(58,58,'rejected','KK tidak ditandatangani lurah'),
+(59,59,'rejected','Foto KK tidak jelas'),
+(60,60,'rejected','Data koordinat tidak valid');
 ```
 
 ---
 
-## 2.4 Data Dummy - Kelompok D (Penerimaan)
+## STEP 6: Insert PENERIMAAN — Data Rusak
 
 ```sql
 -- ============================================================
--- INSERT PENERIMAAN AFIRMASI
--- Hanya 50 data UNIK (verification_id tidak boleh duplikat)
--- karena ada constraint UNIQUE pada verification_id
+-- PENERIMAAN_AFIRMASI
+-- KERUSAKAN TIPE 1: id 41-50 (approved) TIDAK dimasukkan
+-- KERUSAKAN TIPE 2: id 51-60 (rejected) DIMASUKKAN (salah!)
+-- Hanya id 1-40 yang benar + id 51-60 yang harusnya tidak ada
 -- ============================================================
-
--- Hapus data lama jika ada
-TRUNCATE TABLE penerimaan_afirmasi RESTART IDENTITY CASCADE;
-
--- Insert 50 data dengan verification_id yang unik
--- Hanya menggunakan verification_id yang action-nya 'approve'
--- (Lihat tabel verification_afirmasi untuk referensi)
-INSERT INTO penerimaan_afirmasi
-    (verification_id, kepsek_id, code, seen_at)
-VALUES
--- verification_id 1  → action approve
-( 1,  4, 'PA-2023-001', '2023-06-23 08:00:00'),
--- verification_id 2  → action approve
-( 2,  7, 'PA-2023-002', '2023-06-23 08:30:00'),
--- verification_id 4  → action approve (id 3 reject)
-( 4,  4, 'PA-2023-003', '2023-06-23 09:00:00'),
--- verification_id 5  → action approve
-( 5,  7, 'PA-2023-004', '2023-06-23 09:30:00'),
--- verification_id 6  → action approve
-( 6,  4, 'PA-2023-005', '2023-06-23 10:00:00'),
--- verification_id 7  → action approve
-( 7,  7, 'PA-2023-006', '2023-06-23 10:30:00'),
--- verification_id 9  → action approve (id 8 reject)
-( 9,  4, 'PA-2023-007', '2023-06-23 11:00:00'),
--- verification_id 10 → action approve
-(10,  7, 'PA-2023-008', '2023-06-23 11:30:00'),
--- verification_id 11 → action approve
-(11,  4, 'PA-2023-009', '2023-06-23 13:00:00'),
--- verification_id 12 → action approve
-(12,  7, 'PA-2023-010', '2023-06-23 13:30:00'),
--- verification_id 13 → action approve
-(13,  4, 'PA-2023-011', '2023-06-23 14:00:00'),
--- verification_id 14 → action approve
-(14,  7, 'PA-2023-012', '2023-06-23 14:30:00'),
--- verification_id 18 → action approve
-(18,  4, 'PA-2023-013', '2023-06-23 15:00:00'),
--- verification_id 19 → action approve
-(19,  7, 'PA-2023-014', '2023-06-23 15:30:00'),
--- verification_id 20 → action approve
-(20,  4, 'PA-2023-015', '2023-06-23 16:00:00'),
--- verification_id 21 → action approve
-(21,  7, 'PA-2023-016', '2023-06-23 16:30:00'),
--- verification_id 23 → action approve
-(23,  4, 'PA-2023-017', '2023-06-23 17:00:00'),
--- verification_id 24 → action approve (seen_at NULL = belum dilihat)
-(24,  7, 'PA-2023-018', NULL),
--- verification_id 25 → action approve
-(25,  4, 'PA-2023-019', NULL),
--- verification_id 26 → action approve
-(26,  7, 'PA-2023-020', NULL),
--- verification_id 28 → action approve
-(28,  4, 'PA-2023-021', '2023-06-24 08:00:00'),
--- verification_id 29 → action approve
-(29,  7, 'PA-2023-022', '2023-06-24 08:30:00'),
--- verification_id 30 → action approve
-(30,  4, 'PA-2023-023', '2023-06-24 09:00:00'),
--- verification_id 32 → action approve
-(32,  7, 'PA-2023-024', '2023-06-24 09:30:00'),
--- verification_id 33 → action approve
-(33,  4, 'PA-2023-025', '2023-06-24 10:00:00'),
--- verification_id 34 → action approve
-(34,  7, 'PA-2023-026', '2023-06-24 10:30:00'),
--- verification_id 36 → action approve
-(36,  4, 'PA-2023-027', '2023-06-24 11:00:00'),
--- verification_id 37 → action approve
-(37,  7, 'PA-2023-028', '2023-06-24 11:30:00'),
--- verification_id 38 → action approve
-(38,  4, 'PA-2023-029', '2023-06-24 13:00:00'),
--- verification_id 39 → action approve
-(39,  7, 'PA-2023-030', NULL),
--- verification_id 40 → action approve
-(40,  4, 'PA-2023-031', '2023-06-24 14:00:00'),
--- verification_id 42 → action approve
-(42,  7, 'PA-2023-032', '2023-06-24 14:30:00'),
--- verification_id 43 → action approve
-(43,  4, 'PA-2023-033', '2023-06-24 15:00:00'),
--- verification_id 44 → action approve
-(44,  7, 'PA-2023-034', NULL),
--- verification_id 46 → action approve
-(46,  4, 'PA-2023-035', '2023-06-24 16:00:00'),
--- verification_id 47 → action approve
-(47,  7, 'PA-2023-036', '2023-06-24 16:30:00'),
--- verification_id 48 → action approve
-(48,  4, 'PA-2023-037', '2023-06-24 17:00:00'),
--- verification_id 49 → action approve
-(49,  7, 'PA-2023-038', NULL),
--- verification_id 50 → action approve
-(50,  4, 'PA-2023-039', '2023-06-23 08:00:00');
-
+INSERT INTO penerimaan_afirmasi (
+    verification_id, kepsek_id, code, seen_at
+) VALUES
+-- BENAR: id 1-40 (approved → ada penerimaan) ✓
+(1, 6,'AFR-2023-0001','2023-06-23 08:00:00'),
+(2, 6,'AFR-2023-0002','2023-06-23 08:05:00'),
+(3, 6,'AFR-2023-0003','2023-06-23 08:10:00'),
+(4, 6,'AFR-2023-0004','2023-06-23 08:15:00'),
+(5, 6,'AFR-2023-0005','2023-06-23 08:20:00'),
+(6, 6,'AFR-2023-0006','2023-06-23 08:25:00'),
+(7, 6,'AFR-2023-0007','2023-06-23 08:30:00'),
+(8, 6,'AFR-2023-0008','2023-06-23 08:35:00'),
+(9, 6,'AFR-2023-0009','2023-06-23 08:40:00'),
+(10,6,'AFR-2023-0010','2023-06-23 08:45:00'),
+(11,6,'AFR-2023-0011','2023-06-23 08:50:00'),
+(12,6,'AFR-2023-0012','2023-06-23 08:55:00'),
+(13,6,'AFR-2023-0013','2023-06-23 09:00:00'),
+(14,6,'AFR-2023-0014','2023-06-23 09:05:00'),
+(15,6,'AFR-2023-0015','2023-06-23 09:10:00'),
+(16,6,'AFR-2023-0016','2023-06-23 09:15:00'),
+(17,6,'AFR-2023-0017','2023-06-23 09:20:00'),
+(18,6,'AFR-2023-0018','2023-06-23 09:25:00'),
+(19,6,'AFR-2023-0019','2023-06-23 09:30:00'),
+(20,6,'AFR-2023-0020','2023-06-23 09:35:00'),
+(21,6,'AFR-2023-0021','2023-06-23 09:40:00'),
+(22,6,'AFR-2023-0022','2023-06-23 09:45:00'),
+(23,6,'AFR-2023-0023','2023-06-23 09:50:00'),
+(24,6,'AFR-2023-0024','2023-06-23 09:55:00'),
+(25,6,'AFR-2023-0025','2023-06-23 10:00:00'),
+(26,6,'AFR-2023-0026','2023-06-23 10:05:00'),
+(27,6,'AFR-2023-0027','2023-06-23 10:10:00'),
+(28,6,'AFR-2023-0028','2023-06-23 10:15:00'),
+(29,6,'AFR-2023-0029','2023-06-23 10:20:00'),
+(30,6,'AFR-2023-0030','2023-06-23 10:25:00'),
+(31,6,'AFR-2023-0031','2023-06-23 10:30:00'),
+(32,6,'AFR-2023-0032','2023-06-23 10:35:00'),
+(33,6,'AFR-2023-0033','2023-06-23 10:40:00'),
+(34,6,'AFR-2023-0034','2023-06-23 10:45:00'),
+(35,6,'AFR-2023-0035','2023-06-23 10:50:00'),
+(36,6,'AFR-2023-0036','2023-06-23 10:55:00'),
+(37,6,'AFR-2023-0037','2023-06-23 11:00:00'),
+(38,6,'AFR-2023-0038','2023-06-23 11:05:00'),
+(39,6,'AFR-2023-0039','2023-06-23 11:10:00'),
+(40,6,'AFR-2023-0040','2023-06-23 11:15:00'),
+-- id 41-50 SENGAJA TIDAK DIINSERT (approved tapi tidak ada penerimaan) ← RUSAK
+-- RUSAK: id 51-60 (rejected) tapi ADA penerimaan ← SEHARUSNYA TIDAK ADA!
+(51,6,'AFR-2023-0051','2023-06-23 14:00:00'),
+(52,6,'AFR-2023-0052','2023-06-23 14:05:00'),
+(53,6,'AFR-2023-0053','2023-06-23 14:10:00'),
+(54,6,'AFR-2023-0054','2023-06-23 14:15:00'),
+(55,6,'AFR-2023-0055','2023-06-23 14:20:00'),
+(56,6,'AFR-2023-0056','2023-06-23 14:25:00'),
+(57,6,'AFR-2023-0057','2023-06-23 14:30:00'),
+(58,6,'AFR-2023-0058','2023-06-23 14:35:00'),
+(59,6,'AFR-2023-0059','2023-06-23 14:40:00'),
+(60,6,'AFR-2023-0060','2023-06-23 14:45:00');
 
 -- ============================================================
--- PERBAIKAN PENERIMAAN MUTASI
--- Hapus duplikat, hanya gunakan verification_id unik
+-- PENERIMAAN_MUTASI (sama polanya dengan afirmasi)
 -- ============================================================
-
-TRUNCATE TABLE penerimaan_mutasi RESTART IDENTITY CASCADE;
-
-INSERT INTO penerimaan_mutasi
-    (verification_id, code, seen_at)
-VALUES
-( 1, 'PMU-2023-001', '2023-06-23 08:00:00'),
-( 2, 'PMU-2023-002', '2023-06-23 08:30:00'),
-( 4, 'PMU-2023-003', '2023-06-23 09:00:00'),
-( 5, 'PMU-2023-004', '2023-06-23 09:30:00'),
-( 6, 'PMU-2023-005', '2023-06-23 10:00:00'),
-( 8, 'PMU-2023-006', '2023-06-23 10:30:00'),
-( 9, 'PMU-2023-007', '2023-06-23 11:00:00'),
-(10, 'PMU-2023-008', '2023-06-23 11:30:00'),
-(12, 'PMU-2023-009', '2023-06-23 13:00:00'),
-(13, 'PMU-2023-010', '2023-06-23 13:30:00'),
-(15, 'PMU-2023-011', '2023-06-23 14:00:00'),
-(16, 'PMU-2023-012', '2023-06-23 14:30:00'),
-(17, 'PMU-2023-013', '2023-06-23 15:00:00'),
-(19, 'PMU-2023-014', '2023-06-23 15:30:00'),
-(20, 'PMU-2023-015', '2023-06-23 16:00:00'),
-(21, 'PMU-2023-016', '2023-06-23 16:30:00'),
-(22, 'PMU-2023-017', '2023-06-23 17:00:00'),
-(23, 'PMU-2023-018', NULL),
-(24, 'PMU-2023-019', NULL),
-(25, 'PMU-2023-020', NULL),
-(27, 'PMU-2023-021', '2023-06-24 08:00:00'),
-(28, 'PMU-2023-022', '2023-06-24 08:30:00'),
-(29, 'PMU-2023-023', '2023-06-24 09:00:00'),
-(30, 'PMU-2023-024', '2023-06-24 09:30:00'),
-(31, 'PMU-2023-025', '2023-06-24 10:00:00'),
-(32, 'PMU-2023-026', '2023-06-24 10:30:00'),
-(34, 'PMU-2023-027', '2023-06-24 11:00:00'),
-(35, 'PMU-2023-028', '2023-06-24 11:30:00'),
-(36, 'PMU-2023-029', '2023-06-24 13:00:00'),
-(37, 'PMU-2023-030', NULL),
-(40, 'PMU-2023-031', '2023-06-24 14:00:00'),
-(41, 'PMU-2023-032', '2023-06-24 14:30:00'),
-(42, 'PMU-2023-033', '2023-06-24 15:00:00'),
-(44, 'PMU-2023-034', NULL),
-(45, 'PMU-2023-035', '2023-06-24 16:00:00'),
-(46, 'PMU-2023-036', '2023-06-24 16:30:00'),
-(47, 'PMU-2023-037', '2023-06-24 17:00:00'),
-(49, 'PMU-2023-038', NULL),
-(50, 'PMU-2023-039', '2023-06-23 08:00:00');
+INSERT INTO penerimaan_mutasi (verification_id, code, seen_at) VALUES
+(1,'MTS-2023-0001','2023-06-23 08:02:00'),(2,'MTS-2023-0002','2023-06-23 08:07:00'),
+(3,'MTS-2023-0003','2023-06-23 08:12:00'),(4,'MTS-2023-0004','2023-06-23 08:17:00'),
+(5,'MTS-2023-0005','2023-06-23 08:22:00'),(6,'MTS-2023-0006','2023-06-23 08:27:00'),
+(7,'MTS-2023-0007','2023-06-23 08:32:00'),(8,'MTS-2023-0008','2023-06-23 08:37:00'),
+(9,'MTS-2023-0009','2023-06-23 08:42:00'),(10,'MTS-2023-0010','2023-06-23 08:47:00'),
+(11,'MTS-2023-0011','2023-06-23 08:52:00'),(12,'MTS-2023-0012','2023-06-23 08:57:00'),
+(13,'MTS-2023-0013','2023-06-23 09:02:00'),(14,'MTS-2023-0014','2023-06-23 09:07:00'),
+(15,'MTS-2023-0015','2023-06-23 09:12:00'),(16,'MTS-2023-0016','2023-06-23 09:17:00'),
+(17,'MTS-2023-0017','2023-06-23 09:22:00'),(18,'MTS-2023-0018','2023-06-23 09:27:00'),
+(19,'MTS-2023-0019','2023-06-23 09:32:00'),(20,'MTS-2023-0020','2023-06-23 09:37:00'),
+(21,'MTS-2023-0021','2023-06-23 09:42:00'),(22,'MTS-2023-0022','2023-06-23 09:47:00'),
+(23,'MTS-2023-0023','2023-06-23 09:52:00'),(24,'MTS-2023-0024','2023-06-23 09:57:00'),
+(25,'MTS-2023-0025','2023-06-23 10:02:00'),(26,'MTS-2023-0026','2023-06-23 10:07:00'),
+(27,'MTS-2023-0027','2023-06-23 10:12:00'),(28,'MTS-2023-0028','2023-06-23 10:17:00'),
+(29,'MTS-2023-0029','2023-06-23 10:22:00'),(30,'MTS-2023-0030','2023-06-23 10:27:00'),
+(31,'MTS-2023-0031','2023-06-23 10:32:00'),(32,'MTS-2023-0032','2023-06-23 10:37:00'),
+(33,'MTS-2023-0033','2023-06-23 10:42:00'),(34,'MTS-2023-0034','2023-06-23 10:47:00'),
+(35,'MTS-2023-0035','2023-06-23 10:52:00'),(36,'MTS-2023-0036','2023-06-23 10:57:00'),
+(37,'MTS-2023-0037','2023-06-23 11:02:00'),(38,'MTS-2023-0038','2023-06-23 11:07:00'),
+(39,'MTS-2023-0039','2023-06-23 11:12:00'),(40,'MTS-2023-0040','2023-06-23 11:17:00'),
+-- id 41-50 SENGAJA TIDAK DIINSERT ← RUSAK
+-- id 51-60 (rejected) tapi ada penerimaan ← RUSAK
+(51,'MTS-2023-0051','2023-06-23 14:02:00'),(52,'MTS-2023-0052','2023-06-23 14:07:00'),
+(53,'MTS-2023-0053','2023-06-23 14:12:00'),(54,'MTS-2023-0054','2023-06-23 14:17:00'),
+(55,'MTS-2023-0055','2023-06-23 14:22:00'),(56,'MTS-2023-0056','2023-06-23 14:27:00'),
+(57,'MTS-2023-0057','2023-06-23 14:32:00'),(58,'MTS-2023-0058','2023-06-23 14:37:00'),
+(59,'MTS-2023-0059','2023-06-23 14:42:00'),(60,'MTS-2023-0060','2023-06-23 14:47:00');
 
 -- ============================================================
--- PERBAIKAN PENERIMAAN PRESTASI MANDIRI
+-- PENERIMAAN_PRESTASI_MANDIRI
 -- ============================================================
-
-TRUNCATE TABLE penerimaan_prestasi_mandiri RESTART IDENTITY CASCADE;
-
-INSERT INTO penerimaan_prestasi_mandiri
-    (npsn, verification_id, code, seen_at)
-VALUES
-('40300001',  1, 'PPM-2023-001', '2023-06-23 08:00:00'),
-('40300002',  2, 'PPM-2023-002', '2023-06-23 08:30:00'),
-('40300004',  4, 'PPM-2023-003', '2023-06-23 09:00:00'),
-('40300005',  5, 'PPM-2023-004', '2023-06-23 09:30:00'),
-('40300006',  6, 'PPM-2023-005', '2023-06-23 10:00:00'),
-('40300007',  7, 'PPM-2023-006', '2023-06-23 10:30:00'),
-('40300009',  9, 'PPM-2023-007', '2023-06-23 11:00:00'),
-('40300010', 10, 'PPM-2023-008', '2023-06-23 11:30:00'),
-('40300011', 11, 'PPM-2023-009', '2023-06-23 13:00:00'),
-('40300012', 12, 'PPM-2023-010', '2023-06-23 13:30:00'),
-('40300014', 14, 'PPM-2023-011', '2023-06-23 14:00:00'),
-('40300015', 15, 'PPM-2023-012', '2023-06-23 14:30:00'),
-('40300016', 16, 'PPM-2023-013', '2023-06-23 15:00:00'),
-('40300018', 18, 'PPM-2023-014', '2023-06-23 15:30:00'),
-('40300019', 19, 'PPM-2023-015', '2023-06-23 16:00:00'),
-('40300020', 20, 'PPM-2023-016', '2023-06-23 16:30:00'),
-('40300022', 22, 'PPM-2023-017', '2023-06-23 17:00:00'),
-('40300023', 23, 'PPM-2023-018', NULL),
-('40300025', 25, 'PPM-2023-019', NULL),
-('40300026', 26, 'PPM-2023-020', NULL),
-('40300028', 28, 'PPM-2023-021', '2023-06-24 08:00:00'),
-('40300029', 29, 'PPM-2023-022', '2023-06-24 08:30:00'),
-('40300030', 30, 'PPM-2023-023', '2023-06-24 09:00:00'),
-('40300032', 32, 'PPM-2023-024', '2023-06-24 09:30:00'),
-('40300033', 33, 'PPM-2023-025', '2023-06-24 10:00:00'),
-('40300035', 35, 'PPM-2023-026', '2023-06-24 10:30:00'),
-('40300036', 36, 'PPM-2023-027', '2023-06-24 11:00:00'),
-('40300038', 38, 'PPM-2023-028', '2023-06-24 11:30:00'),
-('40300039', 39, 'PPM-2023-029', '2023-06-24 13:00:00'),
-('40300041', 41, 'PPM-2023-030', NULL),
-('40300042', 42, 'PPM-2023-031', '2023-06-24 14:00:00'),
-('40300043', 43, 'PPM-2023-032', '2023-06-24 14:30:00'),
-('40300046', 46, 'PPM-2023-033', '2023-06-24 15:00:00'),
-('40300047', 47, 'PPM-2023-034', NULL),
-('40300049', 49, 'PPM-2023-035', '2023-06-24 16:00:00'),
-('40300050', 50, 'PPM-2023-036', '2023-06-24 16:30:00');
+INSERT INTO penerimaan_prestasi_mandiri (npsn, verification_id, code, seen_at)
+SELECT
+    s.npsn,
+    v.id,
+    'PRS-2023-' || LPAD(v.id::text, 4, '0'),
+    CASE
+        WHEN v.id <= 40 THEN
+            TIMESTAMP '2023-06-23 08:04:00'
+            + ((v.id - 1) * INTERVAL '5 minutes')
+        ELSE
+            TIMESTAMP '2023-06-23 14:04:00'
+            + ((v.id - 51) * INTERVAL '5 minutes')
+    END
+FROM verification_prestasi_mandiri v
+JOIN registrations_prestasi_mandiri r
+    ON r.id = v.registration_id
+JOIN schools s
+    ON s.id = r.school_destination_id
+WHERE v.id <= 40      -- yang benar (approved)
+   OR v.id BETWEEN 51 AND 60;  -- yang rusak (rejected tapi ada penerimaan)
+-- id 41-50 SENGAJA DILEWAT ← RUSAK
 
 -- ============================================================
--- PERBAIKAN PENERIMAAN ZONASI
+-- PENERIMAAN_ZONASI
+-- Tambahan kerusakan: siswa 31-45 juga masuk di zonasi
+-- padahal sudah masuk di afirmasi (multi jalur = RUSAK)
 -- ============================================================
+INSERT INTO penerimaan_zonasi (verification_id, code, seen_at)
+SELECT
+    vz.id,
+    'ZNS-2023-' || LPAD(vz.id::text, 4, '0'),
+    CASE
+        WHEN vz.id <= 40 THEN
+            TIMESTAMP '2023-06-23 08:06:00'
+            + ((vz.id - 1) * INTERVAL '5 minutes')
+        ELSE
+            TIMESTAMP '2023-06-23 14:06:00'
+            + ((vz.id - 51) * INTERVAL '5 minutes')
+    END
+FROM verification_zonasi vz
+WHERE vz.id <= 40         -- yang benar
+   OR vz.id BETWEEN 51 AND 60;  -- rusak: rejected tapi ada penerimaan
+-- id 41-50 SENGAJA DILEWAT ← RUSAK
+```
 
-TRUNCATE TABLE penerimaan_zonasi RESTART IDENTITY CASCADE;
+---
 
-INSERT INTO penerimaan_zonasi
-    (verification_id, code, seen_at)
-VALUES
-( 1, 'PZ-2023-001', '2023-06-23 08:00:00'),
-( 2, 'PZ-2023-002', '2023-06-23 08:30:00'),
-( 3, 'PZ-2023-003', '2023-06-23 09:00:00'),
-( 5, 'PZ-2023-004', '2023-06-23 09:30:00'),
-( 6, 'PZ-2023-005', '2023-06-23 10:00:00'),
-( 7, 'PZ-2023-006', '2023-06-23 10:30:00'),
-( 8, 'PZ-2023-007', '2023-06-23 11:00:00'),
-( 9, 'PZ-2023-008', '2023-06-23 11:30:00'),
-(10, 'PZ-2023-009', '2023-06-23 13:00:00'),
-(12, 'PZ-2023-010', '2023-06-23 13:30:00'),
-(13, 'PZ-2023-011', '2023-06-23 14:00:00'),
-(14, 'PZ-2023-012', '2023-06-23 14:30:00'),
-(15, 'PZ-2023-013', '2023-06-23 15:00:00'),
-(16, 'PZ-2023-014', '2023-06-23 15:30:00'),
-(17, 'PZ-2023-015', '2023-06-23 16:00:00'),
-(18, 'PZ-2023-016', '2023-06-23 16:30:00'),
-(19, 'PZ-2023-017', '2023-06-23 17:00:00'),
-(20, 'PZ-2023-018', NULL),
-(21, 'PZ-2023-019', NULL),
-(23, 'PZ-2023-020', NULL),
-(25, 'PZ-2023-021', '2023-06-24 08:00:00'),
-(26, 'PZ-2023-022', '2023-06-24 08:30:00'),
-(27, 'PZ-2023-023', '2023-06-24 09:00:00'),
-(28, 'PZ-2023-024', '2023-06-24 09:30:00'),
-(29, 'PZ-2023-025', '2023-06-24 10:00:00'),
-(30, 'PZ-2023-026', '2023-06-24 10:30:00'),
-(31, 'PZ-2023-027', '2023-06-24 11:00:00'),
-(32, 'PZ-2023-028', '2023-06-24 11:30:00'),
-(34, 'PZ-2023-029', '2023-06-24 13:00:00'),
-(35, 'PZ-2023-030', NULL),
-(36, 'PZ-2023-031', '2023-06-24 14:00:00'),
-(37, 'PZ-2023-032', '2023-06-24 14:30:00'),
-(38, 'PZ-2023-033', '2023-06-24 15:00:00'),
-(39, 'PZ-2023-034', NULL),
-(40, 'PZ-2023-035', '2023-06-24 16:00:00'),
-(41, 'PZ-2023-036', '2023-06-24 16:30:00'),
-(42, 'PZ-2023-037', '2023-06-24 17:00:00'),
-(44, 'PZ-2023-038', NULL),
-(45, 'PZ-2023-039', '2023-06-23 08:00:00'),
-(46, 'PZ-2023-040', '2023-06-23 09:00:00'),
-(47, 'PZ-2023-041', '2023-06-23 10:00:00'),
-(48, 'PZ-2023-042', '2023-06-23 11:00:00'),
-(49, 'PZ-2023-043', '2023-06-23 13:00:00'),
-(50, 'PZ-2023-044', '2023-06-23 14:00:00');
+## STEP 7: Verifikasi Kerusakan Data
 
+```sql
+-- ============================================================
+-- CEK REKAP JUMLAH DATA
+-- ============================================================
+SELECT tabel, jumlah FROM (
+    SELECT 'roles'                          AS tabel, COUNT(*) AS jumlah FROM roles
+    UNION ALL SELECT 'office_users',          COUNT(*) FROM office_users
+    UNION ALL SELECT 'schools',               COUNT(*) FROM schools
+    UNION ALL SELECT 'school_users',          COUNT(*) FROM school_users
+    UNION ALL SELECT 'junior_schools',        COUNT(*) FROM junior_schools
+    UNION ALL SELECT 'users',                 COUNT(*) FROM users
+    UNION ALL SELECT 'reg_afirmasi',          COUNT(*) FROM registrations_afirmasi
+    UNION ALL SELECT 'reg_mutasi',            COUNT(*) FROM registrations_mutasi
+    UNION ALL SELECT 'reg_prestasi_mandiri',  COUNT(*) FROM registrations_prestasi_mandiri
+    UNION ALL SELECT 'reg_zonasi',            COUNT(*) FROM registrations_zonasi
+    UNION ALL SELECT 'verif_afirmasi',        COUNT(*) FROM verification_afirmasi
+    UNION ALL SELECT 'verif_mutasi',          COUNT(*) FROM verification_mutasi
+    UNION ALL SELECT 'verif_prestasi',        COUNT(*) FROM verification_prestasi_mandiri
+    UNION ALL SELECT 'verif_zonasi',          COUNT(*) FROM verification_zonasi
+    UNION ALL SELECT 'penerimaan_afirmasi',   COUNT(*) FROM penerimaan_afirmasi
+    UNION ALL SELECT 'penerimaan_mutasi',     COUNT(*) FROM penerimaan_mutasi
+    UNION ALL SELECT 'penerimaan_prestasi',   COUNT(*) FROM penerimaan_prestasi_mandiri
+    UNION ALL SELECT 'penerimaan_zonasi',     COUNT(*) FROM penerimaan_zonasi
+) x ORDER BY tabel;
+
+-- ============================================================
+-- KONFIRMASI KERUSAKAN 1:
+-- Approved tapi tidak ada penerimaan (id 41-50 di tiap jalur)
+-- Harusnya: 10 baris per jalur = 40 total
+-- ============================================================
+SELECT 'Afirmasi' AS jalur, COUNT(*) AS jumlah_bermasalah
+FROM verification_afirmasi va
+LEFT JOIN penerimaan_afirmasi pa ON pa.verification_id = va.id
+WHERE va.action = 'approved' AND pa.id IS NULL
+UNION ALL
+SELECT 'Mutasi', COUNT(*)
+FROM verification_mutasi vm
+LEFT JOIN penerimaan_mutasi pm ON pm.verification_id = vm.id
+WHERE vm.action = 'approved' AND pm.id IS NULL
+UNION ALL
+SELECT 'Prestasi', COUNT(*)
+FROM verification_prestasi_mandiri vp
+LEFT JOIN penerimaan_prestasi_mandiri pp ON pp.verification_id = vp.id
+WHERE vp.action = 'approved' AND pp.id IS NULL
+UNION ALL
+SELECT 'Zonasi', COUNT(*)
+FROM verification_zonasi vz
+LEFT JOIN penerimaan_zonasi pz ON pz.verification_id = vz.id
+WHERE vz.action = 'approved' AND pz.id IS NULL;
+
+-- Hasil yang diharapkan:
+-- jalur    │ jumlah_bermasalah
+-- ─────────┼───────────────────
+-- Afirmasi │        10
+-- Mutasi   │        10
+-- Prestasi │        10
+-- Zonasi   │        10
+
+-- ============================================================
+-- KONFIRMASI KERUSAKAN 2:
+-- Rejected tapi ADA penerimaan (id 51-60 di tiap jalur)
+-- Harusnya: 10 baris per jalur = 40 total
+-- ============================================================
+SELECT 'Afirmasi' AS jalur, COUNT(*) AS jumlah_bermasalah
+FROM verification_afirmasi va
+JOIN penerimaan_afirmasi pa ON pa.verification_id = va.id
+WHERE va.action = 'rejected'
+UNION ALL
+SELECT 'Mutasi', COUNT(*)
+FROM verification_mutasi vm
+JOIN penerimaan_mutasi pm ON pm.verification_id = vm.id
+WHERE vm.action = 'rejected'
+UNION ALL
+SELECT 'Prestasi', COUNT(*)
+FROM verification_prestasi_mandiri vp
+JOIN penerimaan_prestasi_mandiri pp ON pp.verification_id = vp.id
+WHERE vp.action = 'rejected'
+UNION ALL
+SELECT 'Zonasi', COUNT(*)
+FROM verification_zonasi vz
+JOIN penerimaan_zonasi pz ON pz.verification_id = vz.id
+WHERE vz.action = 'rejected';
+
+-- Hasil yang diharapkan:
+-- jalur    │ jumlah_bermasalah
+-- ─────────┼───────────────────
+-- Afirmasi │        10
+-- Mutasi   │        10
+-- Prestasi │        10
+-- Zonasi   │        10
+
+-- ============================================================
+-- KONFIRMASI KERUSAKAN 3:
+-- Siswa diterima di lebih dari 1 jalur (user 31-45)
+-- ============================================================
+WITH gabung AS (
+    SELECT u.id AS uid, u.name, 'Afirmasi' AS jalur
+    FROM penerimaan_afirmasi pa
+    JOIN verification_afirmasi va ON va.id = pa.verification_id
+    JOIN registrations_afirmasi ra ON ra.id = va.registration_id
+    JOIN users u ON u.id = ra.user_id
+    UNION ALL
+    SELECT u.id, u.name, 'Mutasi'
+    FROM penerimaan_mutasi pm
+    JOIN verification_mutasi vm ON vm.id = pm.verification_id
+    JOIN registrations_mutasi rm ON rm.id = vm.registration_id
+    JOIN users u ON u.id = rm.user_id
+    UNION ALL
+    SELECT u.id, u.name, 'Prestasi'
+    FROM penerimaan_prestasi_mandiri pp
+    JOIN verification_prestasi_mandiri vp ON vp.id = pp.verification_id
+    JOIN registrations_prestasi_mandiri rp ON rp.id = vp.registration_id
+    JOIN users u ON u.id = rp.user_id
+    UNION ALL
+    SELECT u.id, u.name, 'Zonasi'
+    FROM penerimaan_zonasi pz
+    JOIN verification_zonasi vz ON vz.id = pz.verification_id
+    JOIN registrations_zonasi rz ON rz.id = vz.registration_id
+    JOIN users u ON u.id = rz.user_id
+)
+SELECT uid, name,
+    COUNT(DISTINCT jalur) AS jumlah_jalur,
+    STRING_AGG(jalur, ', ' ORDER BY jalur) AS jalur_diterima
+FROM gabung
+GROUP BY uid, name
+HAVING COUNT(DISTINCT jalur) > 1
+ORDER BY jumlah_jalur DESC, uid;
+
+-- ============================================================
+-- KONFIRMASI KERUSAKAN 4:
+-- Sekolah 1 dan 2 overflow pagu zonasi
+-- pagu_zonasi = 5, tapi user 46-59 semua diarahkan ke sana
+-- ============================================================
+SELECT
+    s.name AS sekolah,
+    s.pagu_afirmasi,
+    s.pagu_zonasi,
+    COUNT(DISTINCT pa.id) AS realisasi_afirmasi,
+    COUNT(DISTINCT pz.id) AS realisasi_zonasi,
+    COUNT(DISTINCT pa.id) - s.pagu_afirmasi AS selisih_afirmasi,
+    COUNT(DISTINCT pz.id) - s.pagu_zonasi   AS selisih_zonasi
+FROM schools s
+LEFT JOIN registrations_afirmasi ra ON ra.school_destination_id = s.id
+LEFT JOIN verification_afirmasi va  ON va.registration_id = ra.id
+    AND va.action = 'approved'
+LEFT JOIN penerimaan_afirmasi pa    ON pa.verification_id = va.id
+LEFT JOIN registrations_zonasi rz   ON rz.school_destination_id = s.id
+LEFT JOIN verification_zonasi vz    ON vz.registration_id = rz.id
+    AND vz.action = 'approved'
+LEFT JOIN penerimaan_zonasi pz      ON pz.verification_id = vz.id
+WHERE s.id IN (1, 2)
+GROUP BY s.id, s.name, s.pagu_afirmasi, s.pagu_zonasi;
+```
+
+---
+
+## Ringkasan Kerusakan yang Tertanam
+
+```
+╔═════╦══════════════════════════════════╦══════════════════════╦══════════╗
+║ No  ║ Jenis Kerusakan                  ║ Data yang Terdampak  ║ Jumlah   ║
+╠═════╬══════════════════════════════════╬══════════════════════╬══════════╣
+║  1  ║ Approved tapi TIDAK ada          ║ verif id 41-50       ║ 40 baris ║
+║     ║ penerimaan (4 jalur)             ║ di 4 tabel verif     ║ rusak    ║
+╠═════╬══════════════════════════════════╬══════════════════════╬══════════╣
+║  2  ║ Rejected tapi ADA penerimaan     ║ verif id 51-60       ║ 40 baris ║
+║     ║ (4 jalur)                        ║ di 4 tabel penerimaan║ rusak    ║
+╠═════╬══════════════════════════════════╬══════════════════════╬══════════╣
+║  3  ║ Siswa diterima di lebih dari     ║ user id 31-45        ║ 15 siswa ║
+║     ║ 1 jalur sekaligus                ║ masuk di 2 jalur     ║ rusak    ║
+╠═════╬══════════════════════════════════╬══════════════════════╬══════════╣
+║  4  ║ Penerimaan melebihi pagu         ║ school id 1 dan 2    ║ 2 sekolah║
+║     ║ (overflow kuota)                 ║ pagu=5, realisasi>5  ║ overflow ║
+╠═════╬══════════════════════════════════╬══════════════════════╬══════════╣
+║  5  ║ Status registrasi tidak atomik   ║ SEMUA users (1-60)   ║ 60 baris ║
+║     ║ (tetap 'submitted' meski terima) ║ status = 'submitted' ║ rusak    ║
+╚═════╩══════════════════════════════════╩══════════════════════╩══════════╝
+```
